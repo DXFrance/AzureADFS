@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|AnyCPU">
+      <Configuration>Debug</Configuration>
+      <Platform>AnyCPU</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|AnyCPU">
+      <Configuration>Release</Configuration>
+      <Platform>AnyCPU</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>64825525-6edf-4265-bf4c-a7dc17e21367</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworkIdentifier>Deployment</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>1.0</TargetFrameworkVersion>
+    <PrepareForBuildDependsOn>
+    </PrepareForBuildDependsOn>
+  </PropertyGroup>
+  <Import Condition=" Exists('Deployment.targets') " Project="Deployment.targets" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+  <!-- vertag<:>start tokens<:>maj.min -->
+  <Import Condition=" Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets') " Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets" />
+  <!-- vertag<:>end -->
+  <ItemGroup>
+    <None Include="Deployment.targets">
+      <Visible>False</Visible>
+    </None>
+    <Content Include="Deploy-AzureResourceGroup.ps1" />
+    <None Include="DSC\adfsDSC.zip" />
+    <None Include="DSC\adfsDSCConfiguration.ps1" />
+    <None Include="DSC\cADFS.psd1" />
+    <None Include="DSC\cADFS.psm1" />
+    <None Include="DSC\CreateADBDC.ps1.zip" />
+    <None Include="DSC\CreateADPDC.ps1.zip" />
+    <None Include="DSC\dscPrereq.ps1" />
+    <None Include="DSC\wapDSCConfiguration.ps1" />
+    <None Include="Scripts\Deploy-AzureADFS.ps1" />
+    <None Include="Templates\adbdcdeploy.json" />
+    <None Include="Templates\adfsdeploy.json" />
+    <None Include="Templates\adpdcdeploy.json" />
+    <Content Include="Templates\azuredeploy.json" />
+    <None Include="Templates\azuredeploy.parameters.json" />
+    <None Include="Templates\lbdeploy.json" />
+    <None Include="Templates\vnetdeploy.json" />
+    <None Include="Templates\vnetdnsdeploy.json" />
+    <None Include="Templates\vpnDeploy.json" />
+  </ItemGroup>
+  <Target Name="GetReferenceAssemblyPaths" />
+</Project>

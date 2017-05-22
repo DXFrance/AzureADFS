@@ -1,0 +1,436 @@
+﻿{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "assetLocation": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/DXFrance/AzureADFS/master/",
+      "metadata": { "description": "This is the location in which all the linked templates are stored." }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "localAdmin",
+      "metadata": {
+        "description": "Username to set for the local User. Cannot be \"Administrator\", \"root\" and possibly other such common account names. "
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for the local administrator account. Cannot be \"P@ssw0rd\" and possibly other such common passwords. Must be 8 characters long and three of the following complexity requirements: uppercase, lowercase, number, special character"
+      }
+    },
+    "companyNamePrefix": {
+      "type": "string",
+      "metadata": { "description": "This is used to prefix the names of the resources created." }
+    },
+    "addcVMNameSuffix": {
+      "type": "string",
+      "defaultValue": "DC",
+      "metadata": { "description": "The suffix of the DC: <COMPANYNAMEPREFIX> + -ADDCNAMESUFFIX + index" }
+    },
+
+    "adfsVMNameSuffix": {
+      "type": "string",
+      "defaultValue": "adfs",
+      "metadata": { "description": "Suffix to use for ADFS VM name" }
+    },
+    "wapVMNameSuffix": {
+      "type": "string",
+      "defaultValue": "proxy",
+      "metadata": {
+        "description": "Suffix to use for WAP VM Name"
+      }
+    },
+    "numberofVMInstances": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": { "description": "The number of ADFS and WAP VMs to build" }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D1",
+      "metadata": {
+        "description": "Select a VM SKU"
+      }
+    },
+    "networkInterfaceName": {
+      "type": "string",
+      "metadata": { "description": "This is the name of the Network interfaces." },
+      "defaultValue": "NIC"
+    },
+    "adPDCNICIPAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "The IP address of the PDC"
+      },
+      "defaultValue": "10.0.1.4"
+    },
+    "adBDCNICIPAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "The IP address of the BDC"
+      },
+      "defaultValue": "10.0.1.5"
+    },
+    "ilbIP": {
+      "type": "string",
+      "defaultValue": "10.0.2.10",
+      "metadata": { "description": "The IP used for the ADFS Load Balancer (Internal)" }
+    },
+    "onPremDNSIP": {
+      "type": "string",
+      "metadata": { "description": "The address of a domain controller on-premises" },
+      "defaultValue": "192.168.32.10"
+    },
+    "localAddressPRefix": {
+      "metadata": {
+        "description": "Address Prefix of the on-premises network"
+      },
+      "defaultValue": [ "192.168.0.0/16" ],
+      "type": "array"
+    },
+    "localGatewayIPAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "IP Address of the on-premises VPN Appliance"
+      }
+    },
+    "virtualNetworkAddressRange": {
+      "type": "string",
+      "metadata": {
+        "description": "The address range of the new virtual network in CIDR format"
+      },
+      "defaultValue": "10.0.0.0/16"
+    },
+    "adSubnetAddressRange": {
+      "type": "string",
+      "metadata": { "description": "The address range of the desired subnet for Active Directory." },
+      "defaultValue": "10.0.1.0/25"
+    },
+    "gatewaySubnetAddressRange": {
+      "type": "string",
+      "defaultValue": "10.0.4.248/29",
+      "metadata": {
+        "description": "Address space used by the VPN Gateway. It must be larger than a /29; it is recommended to keep it at /29 as you can't deploy into it"
+      }
+    },
+    "adfsSubnetAddressRange": {
+      "type": "string",
+      "metadata": { "description": "The address range of the desired subnet for the ADFS Servers." },
+      "defaultValue": "10.0.2.0/24"
+    },
+    "dmzSubnetAddressRange": {
+      "type": "string",
+      "metadata": { "description": "The address range of the desired subnet for the DMZ." },
+      "defaultValue": "10.0.3.0/24"
+    },
+    "localGatewayName": {
+      "type": "string",
+      "defaultValue": "On-Prem-VPN",
+      "metadata": {
+        "description": "Arbitrary name for the gateway representing the on-premises network"
+      }
+    },
+    "sharedKey": {
+      "type": "string",
+      "metadata": {
+        "description": "Arbitrary Shared key (PSK) for IPSec tunnel"
+      },
+      "defaultValue": "YouShouldGenerateANewKey"
+    }
+  },
+  "variables": {
+    "adAvailabilitySetName": "adAvSet",
+    "adfsAvailabilitySetName": "adfsAvSet",
+    "adfsLoadBalancerID": "[resourceId('Microsoft.Network/loadBalancers',variables('adfsLoadBalancerName'))]",
+    "adfsLoadBalancerName": "ADFS-LB",
+    "adfsNSGName": "INT-ADFS",
+    "adfsSubnetID": "[concat(variables('vnetID'),'/subnets/',variables('adfsSubnetName'))]",
+    "adfsSubnetName": "adfsSubnet",
+    "adfsTemplateURI": "[concat(parameters('assetLocation'),'/Templates/adfsDeploy.json')]",
+    "adfsVMName": "[toupper(concat(parameters('companyNamePrefix'), parameters('adfsVMNameSuffix')))]",
+    "adNSGName": "INT-AD",
+    "adSubnetID": "[concat(variables('vnetID'),'/subnets/',variables('adSubnetName'))]",
+    "adSubnetName": "adSubnet",
+    "adTemplateURI": "[concat(parameters('assetLocation'),'/Templates/adDeploy.json')]",
+    "domainName": "[concat(parameters('companyNamePrefix'), '.com')]",
+    "adVMName": "[toupper(concat(parameters('companyNamePrefix'), parameters('addcVMNameSuffix')))]",
+    "dmzNSGName": "DMZ-WAP",
+    "dmzSubnetID": "[concat(variables('vnetID'),'/subnets/',variables('dmzSubnetName'))]",
+    "dmzSubnetName": "dmzSubnet",
+    "gatewaySubnetName": "gatewaySubnet",
+    "imageOffer": "WindowsServer",
+    "imagePublisher": "MicrosoftWindowsServer",
+    "imageSKU": "2012-R2-Datacenter",
+    "rdpIPAddressAdName": "[tolower(concat(parameters('companyNamePrefix'),'-rdp-ad'))]",
+    "rdpIPAddressAdfsName": "[tolower(concat(parameters('companyNamePrefix'),'-rdp-adfs'))]",
+    "pIPAddressWapName": "[tolower(concat(parameters('companyNamePrefix'),'-pip-wap'))]",
+    "connectionName": "[tolower(concat(parameters('companyNamePrefix'),'-VPN'))]",
+    "diagnosticStorageAccountName": "[replace(replace(tolower(concat(parameters('companyNamePrefix'), uniquestring(resourceGroup().id))), '-',''),'.','')]",
+    "storageAccountType": "Standard_GRS",
+    "subnets": [
+      {
+        "name": "[variables('adSubnetName')]",
+        "properties": {
+          "addressprefix": "[parameters('adSubnetAddressRange')]",
+          "networkSecurityGroup": {
+            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('adNSGName'))]"
+          }
+
+        }
+      },
+      {
+        "name": "[variables('adfsSubnetName')]",
+        "properties": {
+          "addressprefix": "[parameters('adfsSubnetAddressRange')]",
+          "networkSecurityGroup": {
+            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('adfsNSGName'))]"
+          }
+
+
+        }
+      },
+      {
+        "name": "[variables('dmzSubnetName')]",
+        "properties": {
+          "addressprefix": "[parameters('dmzSubnetAddressRange')]",
+          "networkSecurityGroup": {
+            "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('DMZNSGName'))]"
+          }
+        }
+      },
+      {
+        "name": "[variables('gatewaySubnetName')]",
+        "properties": {
+          "addressprefix": "[parameters('gatewaySubnetAddressRange')]"
+        }
+      }
+    ],
+    "virtualNetworkName": "[concat(parameters('companyNamePrefix'), '-vnet')]",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+    "vnetTemplateURI": "[concat(parameters('assetLocation'),'/Templates/deployVNet.json')]",
+    "vnetDNSTemplateURI": "[concat(parameters('assetLocation'),'/Templates/deployVNetDNS.json')]",
+    "vpnTemplateURI": "[concat(parameters('assetLocation'),'/Templates/vpnDeploy.json')]",
+    "wapAvailabilitySetName": "wapAvSet",
+    "wapLoadBalancerID": "[resourceId('Microsoft.Network/loadBalancers',variables('wapLoadBalancerName'))]",
+    "wapLoadBalancerName": "WAP-LB",
+    "wapVMName": "[toupper(concat(parameters('companyNamePrefix'), parameters('wapVMNameSuffix')))]",
+    "gatewayPublicIPName": "[tolower(concat(parameters('companyNamePrefix'),'-localVPN'))]",
+    "storageApiVersion": "2015-06-15",
+    "nestedVirtualMachineApiVersion": "2016-09-01",
+    "networkApiVersion": "2017-03-01",
+    "computeApiVersion": "2017-03-30"
+  },
+  "resources": [
+    {
+      "apiVersion": "[variables('storageApiVersion')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[tolower(variables('diagnosticStorageAccountName'))]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "DiagnosticStorageAccount"
+      },
+      "properties": {
+        "accountType": "[variables('storageAccountType')]"
+      }
+    },
+    {
+      "apiVersion": "[variables('computeApiVersion')]",
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('adAvailabilitySetName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Aligned"
+      },
+      "tags": {
+        "displayName": "AdAvailabilitySet"
+      },
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 3
+      }
+    },
+    {
+      "apiVersion": "[variables('networkApiVersion')]",
+      "name": "VNet",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": { "uri": "[variables('vnetTemplateURI')]" },
+        "parameters": {
+          "companyNamePrefix": { "value": "[parameters('companyNamePrefix')]" },
+          "subnets": { "value": "[ variables('subnets') ]" },
+          "virtualNetworkAddressRange": { "value": "[parameters('virtualNetworkAddressRange')]" },
+          "onPremDNSIP": { "value": "[parameters('onPremDNSIP')]" },
+          "ilbIP": { "value": "[parameters('ilbIP')]" },
+          "localGatewayName": { "value": "[parameters('localGatewayName')]" },
+          "localGatewayIPAddress": { "value": "[parameters('localGatewayIPAddress')]" },
+          "localAddressPRefix": { "value": "[parameters('localAddressPrefix')]" },
+          "connectionName": { "value": "[variables('connectionName')]" },
+          "gatewayPublicIPName": { "value": "[variables('gatewayPublicIPName')]" },
+          "sharedKey": { "value": "[parameters('sharedKey')]" },
+          "gatewaySubnetName": { "value": "[variables('gatewaySubnetName')]" }
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('networkApiVersion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('pIPAddressWapName')]",
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "PipAddressWapName" },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('pIPAddressWapName')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('networkApiVersion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('rdpIPAddressAdName'),copyindex())]",
+      "copy": {
+        "name": "virtualMachineLoop",
+        "count": "[parameters('numberofVMInstances')]"
+      },
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "RdpIPAddressAdName" },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[concat(variables('rdpIPAddressAdName'),copyindex())]"
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('networkApiVersion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('rdpIPAddressAdfsName'),copyindex())]",
+      "copy": {
+        "name": "virtualMachineLoop",
+        "count": "[parameters('numberofVMInstances')]"
+      },
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "RdpIPAddressAdfsName" },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[concat(variables('rdpIPAddressAdfsName'),copyindex())]"
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('nestedVirtualMachineApiVersion')]",
+      "name": "AdPdcVM",
+      "type": "Microsoft.Resources/deployments",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/availabilitySets/', variables('adAvailabilitySetName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
+        "Microsoft.Resources/Deployments/virtualNetwork",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('rdpIPAddressAdName'), 0)]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": { "uri": "[variables('adTemplateURI')]" },
+        "parameters": {
+          "adAvailabilitySetName": { "value": "[variables('adAvailabilitySetName')]" },
+          "adminPassword": { "value": "[parameters('adminPassword')]" },
+          "adminUsername": { "value": "[parameters('adminUsername')]" },
+          "adVMName": { "value": "[variables('adVMName')]" },
+          "domainMName": { "value": "[variables('domainName')]" },
+          "assetlocation": { "value": "[parameters('assetLocation')]" },
+          "networkInterfaceName": { "value": "[parameters('NetworkInterfaceName')]" },
+          "diagnosticStorageAccountName": { "value": "[variables('diagnosticStorageAccountName')]" },
+          "virtualNetworkName": { "value": "[variables('virtualNetworkName')]" },
+          "rdpIPAddressAdName": { "value": "[variables('rdpIPAddressAdName')]" },
+          "vmSize": { "value": "[parameters('vmSize')]" }
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('networkApiVersion')]",
+      "name": "VNetDNSServerWithPDC",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": { "uri": "[variables('vnetDNSTemplateURI')]" },
+        "parameters": {
+          "companyNamePrefix": { "value": "[parameters('companyNamePrefix')]" },
+          "subnets": { "value": "[ variables('subnets') ]" },
+          "virtualNetworkAddressRange": { "value": "[parameters('virtualNetworkAddressRange')]" },
+          "onPremDNSIP": { "value": "[parameters('onPremDNSIP')]" },
+          "ilbIP": { "value": "[parameters('ilbIP')]" },
+          "localGatewayName": { "value": "[parameters('localGatewayName')]" },
+          "localGatewayIPAddress": { "value": "[parameters('localGatewayIPAddress')]" },
+          "localAddressPRefix": { "value": "[parameters('localAddressPrefix')]" },
+          "connectionName": { "value": "[variables('connectionName')]" },
+          "gatewayPublicIPName": { "value": "[variables('gatewayPublicIPName')]" },
+          "sharedKey": { "value": "[parameters('sharedKey')]" },
+          "gatewaySubnetName": { "value": "[variables('gatewaySubnetName')]" },
+          "dcPrivateIPsforDNS": {
+            "value": [
+              "[parameters('adPDCNICIPAddress')]"
+            ]
+          }
+        }
+      }
+    },    
+    {
+      "apiVersion": "[variables('nestedVirtualMachineApiVersion')]",
+      "name": "AdBdcVM",
+      "type": "Microsoft.Resources/deployments",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/availabilitySets/', variables('adAvailabilitySetName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
+        "Microsoft.Resources/Deployments/virtualNetwork",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('rdpIPAddressAdName'), 0)]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": { "uri": "[variables('adTemplateURI')]" },
+        "parameters": {
+          "adAvailabilitySetName": { "value": "[variables('adAvailabilitySetName')]" },
+          "adPDCNICIPAddress": { "value": "[parameters('adPDCNICIPAddress')]" },
+          "adBDCNICIPAddress": { "value": "[parameters('adBDCNICIPAddress')]" },
+          "adminPassword": { "value": "[parameters('adminPassword')]" },
+          "adminUsername": { "value": "[parameters('adminUsername')]" },
+          "adVMName": { "value": "[variables('adVMName')]" },
+          "assetlocation": { "value": "[parameters('assetLocation')]" },
+          "networkInterfaceName": { "value": "[parameters('NetworkInterfaceName')]" },
+          "diagnosticStorageAccountName": { "value": "[variables('diagnosticStorageAccountName')]" },
+          "virtualNetworkName": { "value": "[variables('virtualNetworkName')]" },
+          "rdpIPAddressAdName": { "value": "[variables('rdpIPAddressAdName')]" },
+          "vmSize": { "value": "[parameters('vmSize')]" }
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('networkApiVersion')]",
+      "name": "VNetDNSServerWithBDC",
+      "type": "Microsoft.Resources/deployments",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": { "uri": "[variables('vnetDNSTemplateURI')]" },
+        "parameters": {
+          "companyNamePrefix": { "value": "[parameters('companyNamePrefix')]" },
+          "subnets": { "value": "[ variables('subnets') ]" },
+          "virtualNetworkAddressRange": { "value": "[parameters('virtualNetworkAddressRange')]" },
+          "onPremDNSIP": { "value": "[parameters('onPremDNSIP')]" },
+          "ilbIP": { "value": "[parameters('ilbIP')]" },
+          "localGatewayName": { "value": "[parameters('localGatewayName')]" },
+          "localGatewayIPAddress": { "value": "[parameters('localGatewayIPAddress')]" },
+          "localAddressPRefix": { "value": "[parameters('localAddressPrefix')]" },
+          "connectionName": { "value": "[variables('connectionName')]" },
+          "gatewayPublicIPName": { "value": "[variables('gatewayPublicIPName')]" },
+          "sharedKey": { "value": "[parameters('sharedKey')]" },
+          "gatewaySubnetName": { "value": "[variables('gatewaySubnetName')]" },
+          "dcPrivateIPsforDNS": { "value": ["[parameters('adPDCNICIPAddress')]","[parameters('adBDCNICIPAddress')]"
+            ]
+          }
+        }
+      }
+    }    
+  ]
+}

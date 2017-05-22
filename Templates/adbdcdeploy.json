@@ -1,0 +1,195 @@
+﻿{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adAvailabilitySetName": {
+      "type": "string"
+    },
+    "adPDCNICIPAddress": {
+      "type": "string",
+      "metadata": { "description": "The IP Addresses assigned to the pdc domain controllers" }
+    },
+    "adBDCNICIPAddress": {
+      "type": "string",
+      "metadata": { "description": "The IP Addresses assigned to the bdc domain controllers" }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Admin password"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Admin username"
+      }
+    },
+    "domainName": {
+      "type": "string"
+    },
+    "adSubnetName": {
+      "type": "string",
+      "defaultValue": "adSubnet"
+    },
+    "adVMName": {
+      "type": "string",
+      "defaultValue": "AZAD"
+    },
+    "assetLocation": {
+      "type": "string"
+    },
+    "NetworkInterfaceName": {
+      "type": "string",
+      "defaultValue": "NIC",
+      "metadata": {
+        "description": "This is the prefix name of the Network interfaces"
+      }
+    },
+    "diagnosticStorageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Storage account name"
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string",
+      "defaultValue": "vnet"
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D1",
+      "metadata": {
+        "description": "This is the allowed list of VM sizes"
+      }
+    },
+    "rdpIPAddressAdName": {
+      "type": "string",
+      "metadata": { "description": "PIP ADFS Address Name prefix" }
+    }
+  },
+  "variables": {
+    "adDSCTemplate": "[concat(parameters('assetLocation'), 'DSC/CreateADPDC.ps1.zip')]",
+    "adPDCConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
+    "adSubnetID": "[concat(variables('vnetID'),'/subnets/', parameters('adSubnetName'))]",
+    "imageOffer": "WindowsServer",
+    "imagePublisher": "MicrosoftWindowsServer",
+    "imageSKU": "2012-R2-Datacenter",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+    "adPDCVMName": "[concat(parameters('adVMName'), '1')]",
+    "networkApiVersion": "2017-04-01",
+    "computeApiVersion": "2017-03-30"
+  },
+  "resources": [
+    {
+      "apiVersion": "[variables('networkApiVersion')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat('ad-',parameters('NetworkInterfaceName'), '1')]",
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "adNICs" },
+      "dependsOn": [
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "subnet": {
+                "id": "[variables('adSubnetID')]"
+              },
+              "privateIPAddress": "[parameters('adBDCNICIPAddress')]",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('rdpIPAddressAdName'), '1'))]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": "[parameters('adPDCNICIPAddress')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('computeApiVersion')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('adPDCVMName')]",
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "adPDCVirtualMachine" },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', 'ad-', parameters('NetworkInterfaceName'), '1')]",
+        "[concat('Microsoft.Compute/availabilitySets/', parameters('adavailabilitySetName'))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets',parameters('adavailabilitySetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('adPDCVMName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('imageSKU')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('advmName'),'-osDisk-1')]",
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceid('Microsoft.Network/networkInterfaces', concat('ad-', parameters('NetworkInterfaceName'), '1'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "true",
+            "storageUri": "[concat('http://',parameters('diagnosticStorageAccountName'),'.blob.core.windows.net')]"
+          }
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "[variables('computeApiVersion')]",
+          "location": "[resourceGroup().location]",
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "adPDCExtension",
+          "tags": { "displayName": "adcPDCExtension" },
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.9",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "modulesURL": "[variables('adDSCTemplate')]",
+              "configurationFunction": "[variables('adPDCConfigurationFunction')]",
+              "properties": {
+                "domainName": "[parameters('domainName')]",
+                "adminCreds": {
+                  "userName": "[parameters('adminUserName')]",
+                  "password": "privateSettingsRef:adminPassword"
+                }
+              }
+            },
+            "protectedSettings": {
+              "items": {
+                "adminPassword": "[parameters('adminPassword')]"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
