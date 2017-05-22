@@ -2,9 +2,8 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "companyNamePrefix": {
+    "vnetName": {
       "type": "string",
-      "defaultValue": "Contoso",
       "metadata": {
         "description": "This is used to prefix the names of the resources created"
       }
@@ -153,13 +152,12 @@
     "adsubnetrange": "[parameters('subnets')[0].properties.addressPrefix]",
     "adfsSubnetRange": "[parameters('subnets')[1].properties.addressPrefix]",
     "dmzSubnetRange": "[parameters('subnets')[2].properties.addressPrefix]",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('vnetName'))]",
     "adfsSubnetId": "[concat(variables('vnetID'),'/subnets/',variables ('adfsSubnetName'))]",
     "dmzSubnetId": "[concat(variables('vnetID'),'/subnets/',variables ('dmzSubnetName'))]",
     "gatewaySubnetId": "[concat(variables('vnetID'),'/subnets/',parameters('gatewaySubnetName'))]",
     "adSubnetId": "[concat(variables('vnetID'),'/subnets/',variables ('adSubnetName'))]",
     "dhcpIPs": [ "10.0.1.4", "10.0.1.5" ],
-    "virtualNetworkName": "[concat(parameters('companyNamePrefix'), '-vnet')]",
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "apiVersion": "2017-04-01"
   },
   "resources": [

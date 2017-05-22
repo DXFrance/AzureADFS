@@ -46,7 +46,7 @@
     <None Include="Templates\lbdeploy.json" />
     <None Include="Templates\vnetdeploy.json" />
     <None Include="Templates\vnetdnsdeploy.json" />
-    <None Include="Templates\vpnDeploy.json" />
+    <None Include="Templates\vpndeploy.json" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>

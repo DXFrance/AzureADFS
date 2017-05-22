@@ -4,7 +4,7 @@
   "parameters": {
     "assetLocation": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/DXFrance/AzureADFS/master/",
+      "defaultValue": "https://raw.githubusercontent.com/DXFrance/AzureADFS/master",
       "metadata": { "description": "This is the location in which all the linked templates are stored." }
     },
     "adminUsername": {
@@ -169,6 +169,7 @@
     "connectionName": "[tolower(concat(parameters('companyNamePrefix'),'-VPN'))]",
     "diagnosticStorageAccountName": "[replace(replace(tolower(concat(parameters('companyNamePrefix'), uniquestring(resourceGroup().id))), '-',''),'.','')]",
     "storageAccountType": "Standard_GRS",
+    "vnetName": "[tolower(concat(parameters('companyNamePrefix'),'-vnet'))]",
     "subnets": [
       {
         "name": "[variables('adSubnetName')]",
@@ -209,9 +210,9 @@
     ],
     "virtualNetworkName": "[concat(parameters('companyNamePrefix'), '-vnet')]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-    "vnetTemplateURI": "[concat(parameters('assetLocation'),'/Templates/deployVNet.json')]",
-    "vnetDNSTemplateURI": "[concat(parameters('assetLocation'),'/Templates/deployVNetDNS.json')]",
-    "vpnTemplateURI": "[concat(parameters('assetLocation'),'/Templates/vpnDeploy.json')]",
+    "vnetTemplateURI": "[concat(parameters('assetLocation'),'/Templates/vnetdeploy.json')]",
+    "vnetDNSTemplateURI": "[concat(parameters('assetLocation'),'/Templates/vnetdnsdeploy.json')]",
+    "vpnTemplateURI": "[concat(parameters('assetLocation'),'/Templates/vpndeploy.json')]",
     "wapAvailabilitySetName": "wapAvSet",
     "wapLoadBalancerID": "[resourceId('Microsoft.Network/loadBalancers',variables('wapLoadBalancerName'))]",
     "wapLoadBalancerName": "WAP-LB",
@@ -255,11 +256,12 @@
       "apiVersion": "[variables('networkApiVersion')]",
       "name": "VNet",
       "type": "Microsoft.Resources/deployments",
+      "tags": { "displayName": "VNet" },
       "properties": {
         "mode": "Incremental",
         "templateLink": { "uri": "[variables('vnetTemplateURI')]" },
         "parameters": {
-          "companyNamePrefix": { "value": "[parameters('companyNamePrefix')]" },
+          "vnetName": { "value": "[ variables('vnetName') ]" },
           "subnets": { "value": "[ variables('subnets') ]" },
           "virtualNetworkAddressRange": { "value": "[parameters('virtualNetworkAddressRange')]" },
           "onPremDNSIP": { "value": "[parameters('onPremDNSIP')]" },
@@ -328,7 +330,7 @@
       "dependsOn": [
         "[concat('Microsoft.Compute/availabilitySets/', variables('adAvailabilitySetName'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
-        "Microsoft.Resources/Deployments/virtualNetwork",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
         "[concat('Microsoft.Network/publicIPAddresses/', variables('rdpIPAddressAdName'), 0)]"
       ],
       "properties": {
@@ -353,11 +355,15 @@
       "apiVersion": "[variables('networkApiVersion')]",
       "name": "VNetDNSServerWithPDC",
       "type": "Microsoft.Resources/deployments",
+      "tags": { "displayName": "VNetDNSServerWithPDC" },
+      "dependsOn": [
+        "Microsoft.Resources/deployments/AdPdcVM"
+      ],
       "properties": {
         "mode": "Incremental",
         "templateLink": { "uri": "[variables('vnetDNSTemplateURI')]" },
         "parameters": {
-          "companyNamePrefix": { "value": "[parameters('companyNamePrefix')]" },
+          "vnetName": { "value": "[ variables('vnetName') ]" },
           "subnets": { "value": "[ variables('subnets') ]" },
           "virtualNetworkAddressRange": { "value": "[parameters('virtualNetworkAddressRange')]" },
           "onPremDNSIP": { "value": "[parameters('onPremDNSIP')]" },
@@ -376,7 +382,7 @@
           }
         }
       }
-    },    
+    },
     {
       "apiVersion": "[variables('nestedVirtualMachineApiVersion')]",
       "name": "AdBdcVM",
@@ -384,8 +390,10 @@
       "dependsOn": [
         "[concat('Microsoft.Compute/availabilitySets/', variables('adAvailabilitySetName'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
-        "Microsoft.Resources/Deployments/virtualNetwork",
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('rdpIPAddressAdName'), 0)]"
+        "[concat('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('rdpIPAddressAdName'), 1)]",
+        "Microsoft.Resources/deployments/DSCConfigPDC",
+        "Microsoft.Resources/deployments/VNetDNSServerWithPDC"
       ],
       "properties": {
         "mode": "Incremental",
@@ -410,11 +418,16 @@
       "apiVersion": "[variables('networkApiVersion')]",
       "name": "VNetDNSServerWithBDC",
       "type": "Microsoft.Resources/deployments",
+      "tags": { "displayName": "VNetDNSServerWithBDC" },
+      "type": "Microsoft.Resources/deployments",
+      "dependsOn": [
+        "Microsoft.Resources/deployments/AdBdcVM"
+      ],
       "properties": {
         "mode": "Incremental",
         "templateLink": { "uri": "[variables('vnetDNSTemplateURI')]" },
         "parameters": {
-          "companyNamePrefix": { "value": "[parameters('companyNamePrefix')]" },
+          "vnetName": { "value": "[ variables('vnetName') ]" },
           "subnets": { "value": "[ variables('subnets') ]" },
           "virtualNetworkAddressRange": { "value": "[parameters('virtualNetworkAddressRange')]" },
           "onPremDNSIP": { "value": "[parameters('onPremDNSIP')]" },
@@ -426,11 +439,14 @@
           "gatewayPublicIPName": { "value": "[variables('gatewayPublicIPName')]" },
           "sharedKey": { "value": "[parameters('sharedKey')]" },
           "gatewaySubnetName": { "value": "[variables('gatewaySubnetName')]" },
-          "dcPrivateIPsforDNS": { "value": ["[parameters('adPDCNICIPAddress')]","[parameters('adBDCNICIPAddress')]"
+          "dcPrivateIPsforDNS": {
+            "value": [
+              "[parameters('adPDCNICIPAddress')]",
+              "[parameters('adBDCNICIPAddress')]"
             ]
           }
         }
       }
-    }    
+    }
   ]
 }
