@@ -339,6 +339,7 @@
           "networkInterfaceName": { "value": "[parameters('NetworkInterfaceName')]" },
           "diagnosticStorageAccountName": { "value": "[variables('diagnosticStorageAccountName')]" },
           "vnetName": { "value": "[ variables('vnetName') ]" },
+          "adPDCNICIPAddress": { "value": "[parameters('adPDCNICIPAddress')]" },
           "rdpIPAddressAdName": { "value": "[variables('rdpIPAddressAdName')]" },
           "vmSize": { "value": "[parameters('vmSize')]" }
         }
@@ -388,6 +389,7 @@
           "adBDCNICIPAddress": { "value": "[parameters('adBDCNICIPAddress')]" },
           "adminPassword": { "value": "[parameters('adminPassword')]" },
           "adminUsername": { "value": "[parameters('adminUsername')]" },
+          "domainName": { "value": "[variables('domainName')]" },
           "adVMName": { "value": "[variables('adVMName')]" },
           "assetlocation": { "value": "[parameters('assetLocation')]" },
           "networkInterfaceName": { "value": "[parameters('NetworkInterfaceName')]" },
