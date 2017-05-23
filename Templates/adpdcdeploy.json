@@ -159,7 +159,7 @@
           "apiVersion": "[variables('computeApiVersion')]",
           "location": "[resourceGroup().location]",
           "type": "Microsoft.Compute/virtualMachines/extensions",
-          "name": "adPDCExtension",
+          "name": "[concat(parameters('adVMName'),'/adPDCExtension')]",
           "tags": { "displayName": "adcPDCExtension" },
           "properties": {
             "publisher": "Microsoft.Powershell",
