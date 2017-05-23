@@ -160,6 +160,9 @@
           "location": "[resourceGroup().location]",
           "type": "Microsoft.Compute/virtualMachines/extensions",
           "name": "[concat(parameters('adVMName'),'/adPDCExtension')]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adVMName')))]"
+          ],
           "tags": { "displayName": "adcPDCExtension" },
           "properties": {
             "publisher": "Microsoft.Powershell",
