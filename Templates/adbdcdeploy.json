@@ -165,7 +165,7 @@
         {
           "apiVersion": "[variables('computeApiVersion')]",
           "location": "[resourceGroup().location]",
-          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "type": "extensions",
           "name": "[concat(parameters('adVMName'),'1/extensions/adBDCExtension')]",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines/', parameters('adVMName'))]"
