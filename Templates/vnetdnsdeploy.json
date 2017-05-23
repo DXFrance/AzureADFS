@@ -5,7 +5,7 @@
     "vnetName": {
       "type": "string",
       "metadata": {
-        "description": "This is used to prefix the names of the resources created"
+        "description": "Virtual Network name"
       }
     },
     "virtualNetworkAddressRange": {

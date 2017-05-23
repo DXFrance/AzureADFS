@@ -5,7 +5,7 @@
     "vnetName": {
       "type": "string",
       "metadata": {
-        "description": "This is used to prefix the names of the resources created"
+        "description": "Virtual Network name"
       }
     },
     "virtualNetworkAddressRange": {
@@ -69,77 +69,6 @@
     "ilbIP": {
       "type": "string",
       "metadata": { "description": "IP address of the internal Load Balancer" }
-    },
-    "localGatewayName": {
-      "type": "string",
-      "defaultValue": "localGateway",
-      "metadata": {
-        "description": "Aribtary name for gateway resource representing the on-premise network "
-      }
-    },
-    "localGatewayIpAddress": {
-      "type": "string",
-      "defaultValue": "1.1.1.1",
-      "metadata": {
-        "description": "Public IP of your on-premise VPN"
-      }
-    },
-    "localAddressPrefix": {
-      "type": "array",
-      "defaultValue": [ "172.16.0.0/24", "192.168.0.0/16" ],
-      "metadata": {
-        "description": "CIDR block representing the address space of the OnPremise VPN network's Subnet"
-      }
-    },
-    "gatewayName": {
-      "type": "string",
-      "defaultValue": "azureGateway",
-      "metadata": {
-        "description": "Arbitrary name for the new VPN gateway"
-      }
-    },
-    "gatewayPublicIPName": {
-      "type": "string",
-      "defaultValue": "azureGatewayIP",
-      "metadata": {
-        "description": "public DNS name for the Azure Gateway Endpoint"
-      }
-    },
-    "connectionName": {
-      "type": "string",
-      "defaultValue": "AzureToContoso",
-      "metadata": {
-        "description": "Arbitrary name for the new connection between Azure VNet and other network"
-      }
-    },
-    "gatewaySku": {
-      "type": "string",
-      "defaultValue": "Basic",
-      "allowedValues": [
-        "Basic",
-        "Standard",
-        "HighPerformance"
-      ],
-      "metadata": { "description": "Must be Basic for PolicyBased Routing" }
-    },
-    "vpnType": {
-      "type": "string",
-      "metadata": {
-        "description": "Route based or policy based"
-      },
-      "defaultValue": "PolicyBased",
-      "allowedValues": [
-        "RouteBased",
-        "PolicyBased"
-      ]
-    },
-
-    "sharedKey": {
-      "type": "string",
-      "metadata": {
-        "description": "Shared key (PSK) for IPSec tunnel"
-      },
-      "defaultValue": "YouShouldGenerateANewKey"
     }
   },
   "variables": {
@@ -155,7 +84,6 @@
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('vnetName'))]",
     "adfsSubnetId": "[concat(variables('vnetID'),'/subnets/',variables ('adfsSubnetName'))]",
     "dmzSubnetId": "[concat(variables('vnetID'),'/subnets/',variables ('dmzSubnetName'))]",
-    "gatewaySubnetId": "[concat(variables('vnetID'),'/subnets/',parameters('gatewaySubnetName'))]",
     "adSubnetId": "[concat(variables('vnetID'),'/subnets/',variables ('adSubnetName'))]",
     "dhcpIPs": [ "10.0.1.4", "10.0.1.5" ],
     "apiVersion": "2017-04-01"
@@ -694,7 +622,7 @@
     },
     {
       "apiVersion": "[variables('apiVersion')]",
-      "name": "[variables('virtualNetworkName')]",
+      "name": "[parameters('vnetName')]",
       "type": "Microsoft.Network/virtualNetworks",
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "virtualNetwork" },

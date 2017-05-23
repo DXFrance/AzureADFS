@@ -52,9 +52,11 @@
         "description": "Storage account name"
       }
     },
-    "virtualNetworkName": {
+    "vnetName": {
       "type": "string",
-      "defaultValue": "vnet"
+      "metadata": {
+        "description": "Virtual Network name"
+      }
     },
     "vmSize": {
       "type": "string",
@@ -71,11 +73,11 @@
   "variables": {
     "adDSCTemplate": "[concat(parameters('assetLocation'), 'DSC/CreateADPDC.ps1.zip')]",
     "adPDCConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
     "adSubnetID": "[concat(variables('vnetID'),'/subnets/', parameters('adSubnetName'))]",
     "imageOffer": "WindowsServer",
     "imagePublisher": "MicrosoftWindowsServer",
     "imageSKU": "2012-R2-Datacenter",
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
     "adPDCVMName": "[concat(parameters('adVMName'), '1')]",
     "networkApiVersion": "2017-04-01",
     "computeApiVersion": "2017-03-30"

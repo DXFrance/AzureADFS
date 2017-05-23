@@ -78,11 +78,10 @@
         "description": "CIDR block for VM subnet, subset of azureVNetAddressPrefix address space"
       }
     },
-    "virtualNetworkName": {
+    "vnetName": {
       "type": "string",
-      "defaultValue": "azureVnet",
       "metadata": {
-        "description": "Arbitrary name for the Azure Virtual Network"
+        "description": "Virtual Network name"
       }
     },
     "vpnType": {
@@ -98,7 +97,7 @@
     }
   },
   "variables": {
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
     "gatewaySubnetRef": "[concat(variables('vnetID'),'/subnets/','GatewaySubnet')]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters('subnetName'))]",
     "apiVersion": "2017-04-01"
@@ -142,7 +141,7 @@
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/virtualNetworks",
-      "name": "[parameters('virtualNetworkName')]",
+      "name": "[parameters('vnetName')]",
       "location": "[resourceGroup().location]",
       "properties": {
         "addressSpace": {
@@ -182,7 +181,7 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', parameters('gatewayPublicIPName'))]",
-        "[concat('Microsoft.Network/virtualNetworks/', parameters('virtualNetworkName'))]"
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('vnetName'))]"
       ],
       "properties": {
         "ipConfigurations": [

@@ -6,7 +6,6 @@
       "type": "string",
       "defaultValue": "adfsAvSet"
     },
-
     "adfsLoadBalancerName": {
       "type": "string",
       "defaultValue": "ADFS-LB"
@@ -77,9 +76,11 @@
         "description": "Storage account name"
       }
     },
-    "virtualNetworkName": {
+    "vnetName": {
       "type": "string",
-      "defaultValue": "vnet"
+      "metadata": {
+        "description": "Virtual Network name"
+      }
     },
     "vmSize": {
       "type": "string",
@@ -105,12 +106,12 @@
   "variables": {
     "adfsDSCConfigurationFunction": "adfsDSCConfiguration.ps1\\Main",
     "adfsDSCTemplate": "[concat(parameters('assetLocation'),'DSC/adfsDSC.zip')]",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
     "adfsSubnetID": "[concat(variables('vnetID'),'/subnets/',parameters('adfsSubnetName'))]",
     "dmzSubnetID": "[concat(variables('vnetID'),'/subnets/',parameters('dmzSubnetName'))]",
     "imageOffer": "WindowsServer",
     "imagePublisher": "MicrosoftWindowsServer",
     "imageSKU": "2012-R2-Datacenter",
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
     "wapDSCTemplate": "[concat(parameters('assetLocation'),'/DSC/wapDSCConfiguration.ps1')]",
     "wapDSCConfigurationFunction": "wapDSCConfiguration.ps1\\Main",
     "networkApiVersion": "2017-04-01",
