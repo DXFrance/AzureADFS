@@ -75,6 +75,9 @@
     "imagePublisher": "MicrosoftWindowsServer",
     "imageSKU": "2012-R2-Datacenter",
     "adPDCVMName": "[concat(parameters('adVMName'), '0')]",
+    "storageAccountType": "Standard_LRS",
+    "osDisk": "[concat(variables('adPDCVMName'),'-osDisk')]",
+    "dataDisk": "[concat(variables('adPDCVMName'),'-dataDisk')]",
     "networkApiVersion": "2017-04-01",
     "computeApiVersion": "2017-03-30"
   },
@@ -106,13 +109,27 @@
       }
     },
     {
+      "type": "Microsoft.Compute/disks",
+      "name": "[variables('dataDisk')]",
+      "tags": { "displayName": "managedDataDisk" },
+      "apiVersion": "[variables('computeApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "creationData": {
+          "createOption": "Empty"
+        },
+        "accountType": "[variables('storageAccountType')]",
+        "diskSizeGB": 64
+      }
+    },
+    {
       "apiVersion": "[variables('computeApiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('adPDCVMName')]",
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "adPDCVirtualMachine" },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', 'ad-', parameters('NetworkInterfaceName'), '0')]",
+        "[concat('Microsoft.Network/networkInterfaces/', 'ad-', parameters('NetworkInterfaceName'), '0')]"
       ],
       "properties": {
         "availabilitySet": {
@@ -134,10 +151,20 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "[concat(parameters('adVMName'),'-osDisk-0')]",
+            "name": "[variables('osDisk')]",
             "caching": "ReadWrite",
             "createOption": "FromImage"
-          }
+          },
+          "dataDisks": [
+            {
+              "lun": 2,
+              "name": "[variables('dataDisk')]",
+              "createOption": "attach",
+              "managedDisk": {
+                "id": "[resourceId('Microsoft.Compute/disks', variables('dataDisk'))]"
+              }
+            }
+          ]
         },
         "networkProfile": {
           "networkInterfaces": [

@@ -170,7 +170,7 @@
     "pIPAddressWapName": "[tolower(concat(parameters('companyNamePrefix'),'-pip-wap'))]",
     "connectionName": "[tolower(concat(parameters('companyNamePrefix'),'-VPN'))]",
     "diagnosticStorageAccountName": "[replace(replace(tolower(concat(parameters('companyNamePrefix'), uniquestring(resourceGroup().id))), '-',''),'.','')]",
-    "storageAccountType": "Standard_GRS",
+    "storageAccountType": "Standard_LRS",
     "vnetName": "[concat(parameters('companyNamePrefix'),'-vnet')]",
     "subnets": [
       {

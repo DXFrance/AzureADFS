@@ -79,6 +79,9 @@
     "imagePublisher": "MicrosoftWindowsServer",
     "imageSKU": "2012-R2-Datacenter",
     "adBDCVMName": "[concat(parameters('adVMName'), '1')]",
+    "storageAccountType": "Standard_LRS",
+    "osDisk": "[concat(variables('adBDCVMName'),'-osDisk')]",
+    "dataDisk": "[concat(variables('adBDCVMName'),'-dataDisk')]",
     "networkApiVersion": "2017-04-01",
     "computeApiVersion": "2017-03-30"
   },
@@ -141,10 +144,20 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "[concat(parameters('advmName'),'-osDisk-1')]",
+            "name": "[variables('osDisk')]",
             "caching": "ReadWrite",
             "createOption": "FromImage"
-          }
+          },
+          "dataDisks": [
+            {
+              "lun": 2,
+              "name": "[variables('dataDisk')]",
+              "createOption": "attach",
+              "managedDisk": {
+                "id": "[resourceId('Microsoft.Compute/disks', variables('dataDisk'))]"
+              }
+            }
+          ]
         },
         "networkProfile": {
           "networkInterfaces": [
