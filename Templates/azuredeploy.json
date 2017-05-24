@@ -149,7 +149,7 @@
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
     "adfsSubnetID": "[concat(variables('vnetID'),'/subnets/',variables('adfsSubnetName'))]",
     "adfsSubnetName": "adfsSubnet",
-    "adfsTemplateURI": "[concat(parameters('assetLocation'),'/Templates/adfsDeploy.json')]",
+    "adfsTemplateURI": "[concat(parameters('assetLocation'),'/Templates/adfsdeploy.json')]",
     "adfsVMName": "[toupper(concat(parameters('companyNamePrefix'), parameters('adfsVMNameSuffix')))]",
     "adNSGName": "INT-AD",
     "adSubnetID": "[concat(variables('vnetID'),'/subnets/',variables('adSubnetName'))]",
@@ -447,7 +447,7 @@
       "apiVersion": "2015-01-01",
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
-        "Microsoft.Resources/Deployments/virtualNetwork",
+        "Microsoft.Resources/deployments/VNetDNSServerWithBDC",
         "[concat('Microsoft.Network/publicIPAddresses/', variables('pIPAddressWapName'))]",
         "[concat('Microsoft.Network/publicIPAddresses/', variables('rdpIPAddressAdfsName'), 0)]",
         "[concat('Microsoft.Network/publicIPAddresses/', variables('rdpIPAddressAdfsName'), 1)]"

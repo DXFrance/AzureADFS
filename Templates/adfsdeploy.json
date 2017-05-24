@@ -497,11 +497,11 @@
       "resources": [
         {
           "apiVersion": "[variables('computeApiVersion')]",
-          "name": "adfsJoinDomain",
+          "name": "wapJoinDomain",
           "type": "extensions",
           "location": "[resourceGroup().location]",
           "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
+            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('wapVMName')))]"
           ],
           "properties": {
             "publisher": "Microsoft.Compute",
