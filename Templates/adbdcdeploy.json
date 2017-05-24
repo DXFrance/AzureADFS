@@ -2,7 +2,7 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "adAvailabilitySetName": {
+    "adAvailabilitySetId": {
       "type": "string"
     },
     "adPDCNICIPAddress": {
@@ -123,7 +123,7 @@
       ],
       "properties": {
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets',parameters('adavailabilitySetName'))]"
+          "id": "[parameters('adAvailabilitySetId')]"
         },
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"

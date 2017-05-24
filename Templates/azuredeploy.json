@@ -330,7 +330,7 @@
         "mode": "Incremental",
         "templateLink": { "uri": "[variables('adpdcTemplateURI')]" },
         "parameters": {
-          "adAvailabilitySetName": { "value": "[variables('adAvailabilitySetName')]" },
+          "adAvailabilitySetId": { "value": "[resourceId('Microsoft.Compute/availabilitySets',variables('adAvailabilitySetName'))]" },
           "adminPassword": { "value": "[parameters('adminPassword')]" },
           "adminUsername": { "value": "[parameters('adminUsername')]" },
           "adVMName": { "value": "[variables('adVMName')]" },
@@ -384,7 +384,7 @@
         "mode": "Incremental",
         "templateLink": { "uri": "[variables('adbdcTemplateURI')]" },
         "parameters": {
-          "adAvailabilitySetName": { "value": "[variables('adAvailabilitySetName')]" },
+          "adAvailabilitySetId": { "value": "[resourceId('Microsoft.Compute/availabilitySets',variables('adAvailabilitySetName'))]" },
           "adPDCNICIPAddress": { "value": "[parameters('adPDCNICIPAddress')]" },
           "adBDCNICIPAddress": { "value": "[parameters('adBDCNICIPAddress')]" },
           "adminPassword": { "value": "[parameters('adminPassword')]" },
