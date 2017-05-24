@@ -105,7 +105,7 @@
 
   "variables": {
     "adfsDSCConfigurationFunction": "adfsDSCConfiguration.ps1\\Main",
-    "adfsDSCTemplate": "[concat(parameters('assetLocation'),'DSC/adfsDSC.zip')]",
+    "adfsDSCTemplate": "[concat(parameters('assetLocation'),'/DSC/adfsDSC.zip')]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
     "adfsSubnetID": "[concat(variables('vnetID'),'/subnets/',parameters('adfsSubnetName'))]",
     "dmzSubnetID": "[concat(variables('vnetID'),'/subnets/',parameters('dmzSubnetName'))]",

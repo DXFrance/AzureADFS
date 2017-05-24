@@ -67,7 +67,7 @@
     }
   },
   "variables": {
-    "adDSCTemplate": "[concat(parameters('assetLocation'), 'DSC/CreateADPDC.ps1.zip')]",
+    "adDSCTemplate": "[concat(parameters('assetLocation'), '/DSC/CreateADPDC.ps1.zip')]",
     "adPDCConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
     "adSubnetID": "[concat(variables('vnetID'),'/subnets/', parameters('adSubnetName'))]",
@@ -135,7 +135,7 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "[concat(parameters('advmName'),'-osDisk-0')]",
+            "name": "[concat(parameters('adVMName'),'-osDisk-0')]",
             "caching": "ReadWrite",
             "createOption": "FromImage"
           }
@@ -158,8 +158,8 @@
         {
           "apiVersion": "[variables('computeApiVersion')]",
           "location": "[resourceGroup().location]",
+          "name": "adPDCExtension",
           "type": "extensions",
-          "name": "adPDCExtension'",
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', parameters('adVMName'))]"
           ],

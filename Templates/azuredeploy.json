@@ -146,6 +146,7 @@
     "adfsLoadBalancerID": "[resourceId('Microsoft.Network/loadBalancers',variables('adfsLoadBalancerName'))]",
     "adfsLoadBalancerName": "ADFS-LB",
     "adfsNSGName": "INT-ADFS",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
     "adfsSubnetID": "[concat(variables('vnetID'),'/subnets/',variables('adfsSubnetName'))]",
     "adfsSubnetName": "adfsSubnet",
     "adfsTemplateURI": "[concat(parameters('assetLocation'),'/Templates/adfsDeploy.json')]",
@@ -209,7 +210,6 @@
         }
       }
     ],
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
     "vnetTemplateURI": "[concat(parameters('assetLocation'),'/Templates/vnetdeploy.json')]",
     "vnetDNSTemplateURI": "[concat(parameters('assetLocation'),'/Templates/vnetdnsdeploy.json')]",
     "vpnTemplateURI": "[concat(parameters('assetLocation'),'/Templates/vpndeploy.json')]",
@@ -256,7 +256,6 @@
       "apiVersion": "[variables('networkApiVersion')]",
       "name": "VNet",
       "type": "Microsoft.Resources/deployments",
-      "tags": { "displayName": "VNet" },
       "properties": {
         "mode": "Incremental",
         "templateLink": { "uri": "[variables('vnetTemplateURI')]" },
@@ -316,6 +315,7 @@
         }
       }
     },
+
     {
       "apiVersion": "[variables('nestedVirtualMachineApiVersion')]",
       "name": "AdPdcVM",
