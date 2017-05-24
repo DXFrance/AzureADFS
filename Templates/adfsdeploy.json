@@ -22,6 +22,9 @@
       "type": "string",
       "defaultValue": "adSubnet"
     },
+    "domainName": {
+      "type": "string"
+    },
     "adfsVMName": {
       "type": "string",
       "defaultValue": "AZADFS"
@@ -114,6 +117,8 @@
     "imageSKU": "2012-R2-Datacenter",
     "wapDSCTemplate": "[concat(parameters('assetLocation'),'/DSC/wapDSCConfiguration.ps1')]",
     "wapDSCConfigurationFunction": "wapDSCConfiguration.ps1\\Main",
+    "domainJoinOptions": "3",
+    "ouPath": "",
     "networkApiVersion": "2017-04-01",
     "computeApiVersion": "2017-03-30"
   },
@@ -386,6 +391,30 @@
       "resources": [
         {
           "apiVersion": "[variables('computeApiVersion')]",
+          "name": "adfsJoinDomain",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "JsonADDomainExtension",
+            "typeHandlerVersion": "1.0",
+            "settings": {
+              "Name": "[parameters('domainName')]",
+              "OUPath": "[variables('ouPath')]",
+              "User": "[concat(parameters('domainName'),'\\',parameters('adminUsername'))]",
+              "Restart": "true",
+              "Options": "[variables('domainJoinOptions')]"
+            },
+            "protectedsettings": {
+              "Password": "[parameters('adminPassword')]"
+            }
+          }
+        },
+        {
+          "apiVersion": "[variables('computeApiVersion')]",
           "name": "adfsDSCConfiguration",
           "type": "extensions",
           "location": "[resourceGroup().location]",
@@ -464,7 +493,33 @@
             "storageUri": "[concat('http://',parameters('diagnosticStorageAccountName'),'.blob.core.windows.net')]"
           }
         }
-      }
+      },
+      "resources": [
+        {
+          "apiVersion": "[variables('computeApiVersion')]",
+          "name": "adfsJoinDomain",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "JsonADDomainExtension",
+            "typeHandlerVersion": "1.0",
+            "settings": {
+              "Name": "[parameters('domainName')]",
+              "OUPath": "[variables('ouPath')]",
+              "User": "[concat(parameters('domainName'),'\\',parameters('adminUsername'))]",
+              "Restart": "true",
+              "Options": "[variables('domainJoinOptions')]"
+            },
+            "protectedsettings": {
+              "Password": "[parameters('adminPassword')]"
+            }
+          }
+        }
+      ]
     }
   ]
 }

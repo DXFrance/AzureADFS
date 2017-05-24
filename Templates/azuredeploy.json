@@ -397,8 +397,12 @@
         "templateLink": { "uri": "[variables('adbdcTemplateURI')]" },
         "parameters": {
           "adAvailabilitySetId": { "value": "[resourceId('Microsoft.Compute/availabilitySets',variables('adAvailabilitySetName'))]" },
-          "adPDCNICIPAddress": { "value": "[parameters('adPDCNICIPAddress')]" },
-          "adBDCNICIPAddress": { "value": "[parameters('adBDCNICIPAddress')]" },
+          "dcPrivateIPsforDNS": {
+            "value": [
+              "[parameters('adPDCNICIPAddress')]",
+              "[parameters('adBDCNICIPAddress')]"
+            ]
+          },
           "adminPassword": { "value": "[parameters('adminPassword')]" },
           "adminUsername": { "value": "[parameters('adminUsername')]" },
           "domainName": { "value": "[variables('domainName')]" },
@@ -434,6 +438,42 @@
               "[parameters('adBDCNICIPAddress')]"
             ]
           }
+        }
+      }
+    },
+    {
+      "name": "adfsVMs",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
+        "Microsoft.Resources/Deployments/virtualNetwork",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('pIPAddressWapName'))]",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('rdpIPAddressAdfsName'), 0)]",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('rdpIPAddressAdfsName'), 1)]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": { "uri": "[variables('adfsTemplateURI')]" },
+        "parameters": {
+          "adfsSubnetName": { "value": "[variables('adfsSubnetName')]" },
+          "adfsVMName": { "value": "[variables('adfsVMName')]" },
+          "domainName": { "value": "[variables('domainName')]" },
+          "adminPassword": { "value": "[parameters('adminPassword')]" },
+          "adminUsername": { "value": "[parameters('adminUsername')]" },
+          "assetlocation": { "value": "[parameters('assetLocation')]" },
+          "dmzSubnetName": { "value": "[variables('dmzSubnetName')]" },
+          "dmzNSGName": { "value": "[variables('dmzNSGName')]" },
+          "adfsNSGName": { "value": "[variables('adfsNSGName')]" },
+          "ilbIP": { "value": "[parameters('ilbIP')]" },
+          "networkInterfaceName": { "value": "[parameters('NetworkInterfaceName')]" },
+          "numberofVMInstances": { "value": "[parameters('numberofVMInstances')]" },
+          "pIPAddressWapName": { "value": "[variables('pIPAddressWapName')]" },
+          "rdpIPAddressAdfsName": { "value": "[variables('rdpIPAddressAdfsName')]" },
+          "diagnosticStorageAccountName": { "value": "[variables('diagnosticStorageAccountName')]" },
+          "vnetName": { "value": "[ variables('vnetName') ]" },
+          "vmSize": { "value": "[parameters('vmSize')]" },
+          "wapVMName": { "value": "[variables('wapVMName')]" }
         }
       }
     }
