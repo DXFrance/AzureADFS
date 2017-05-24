@@ -501,7 +501,7 @@
           "type": "extensions",
           "location": "[resourceGroup().location]",
           "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('wapVMName')))]"
+            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('wapVMName'), copyindex()))]"
           ],
           "properties": {
             "publisher": "Microsoft.Compute",
