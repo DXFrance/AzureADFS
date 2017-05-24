@@ -116,11 +116,25 @@
       }
     },
     {
+      "type": "Microsoft.Compute/disks",
+      "name": "[variables('dataDisk')]",
+      "tags": { "displayName": "managedDataDisk" },
+      "apiVersion": "[variables('computeApiVersion')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "creationData": {
+          "createOption": "Empty"
+        },
+        "accountType": "[variables('storageAccountType')]",
+        "diskSizeGB": 64
+      }
+    },
+    {
       "apiVersion": "[variables('computeApiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('adBDCVMName')]",
       "location": "[resourceGroup().location]",
-      "tags": { "displayName": "adPDCVirtualMachine" },
+      "tags": { "displayName": "adBDCVirtualMachine" },
       "dependsOn": [
         "[concat('Microsoft.Network/networkInterfaces/', 'ad-', parameters('NetworkInterfaceName'), '1')]",
         "[concat('Microsoft.Compute/disks/', variables('dataDisk'))]"
