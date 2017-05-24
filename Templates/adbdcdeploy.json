@@ -71,14 +71,14 @@
     }
   },
   "variables": {
-    "adDSCTemplate": "[concat(parameters('assetLocation'), '/DSC/CreateADPDC.ps1.zip')]",
-    "adPDCConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
+    "adDSCTemplate": "[concat(parameters('assetLocation'), '/DSC/CreateADBDC.ps1.zip')]",
+    "adBDCConfigurationFunction": "CreateADBDC.ps1\\CreateADBDC",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
     "adSubnetID": "[concat(variables('vnetID'),'/subnets/', parameters('adSubnetName'))]",
     "imageOffer": "WindowsServer",
     "imagePublisher": "MicrosoftWindowsServer",
     "imageSKU": "2012-R2-Datacenter",
-    "adPDCVMName": "[concat(parameters('adVMName'), '1')]",
+    "adBDCVMName": "[concat(parameters('adVMName'), '1')]",
     "networkApiVersion": "2017-04-01",
     "computeApiVersion": "2017-03-30"
   },
@@ -115,7 +115,7 @@
     {
       "apiVersion": "[variables('computeApiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[variables('adPDCVMName')]",
+      "name": "[variables('adBDCVMName')]",
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "adPDCVirtualMachine" },
       "dependsOn": [
@@ -130,7 +130,7 @@
           "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[variables('adPDCVMName')]",
+          "computerName": "[variables('adBDCVMName')]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
@@ -168,7 +168,7 @@
           "name": "adBDCExtension",
           "type": "extensions",
           "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', parameters('adVMName'))]"
+            "[concat('Microsoft.Compute/virtualMachines/', variables('adBDCVMName'))]"
           ],
           "tags": { "displayName": "adcPDCExtension" },
           "properties": {
@@ -178,7 +178,7 @@
             "autoUpgradeMinorVersion": true,
             "settings": {
               "modulesURL": "[variables('adDSCTemplate')]",
-              "configurationFunction": "[variables('adPDCConfigurationFunction')]",
+              "configurationFunction": "[variables('adBDCConfigurationFunction')]",
               "properties": {
                 "domainName": "[parameters('domainName')]",
                 "adminCreds": {

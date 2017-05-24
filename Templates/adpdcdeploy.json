@@ -161,7 +161,7 @@
           "name": "adPDCExtension",
           "type": "extensions",
           "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', parameters('adVMName'))]"
+            "[concat('Microsoft.Compute/virtualMachines/', variables('adPDCVMName'))]"
           ],
 
           "tags": { "displayName": "adcPDCExtension" },
