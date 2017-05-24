@@ -120,7 +120,6 @@
       "tags": { "displayName": "adPDCVirtualMachine" },
       "dependsOn": [
         "[concat('Microsoft.Network/networkInterfaces/', 'ad-', parameters('NetworkInterfaceName'), '1')]",
-        "[concat('Microsoft.Compute/availabilitySets/', parameters('adavailabilitySetName'))]"
       ],
       "properties": {
         "availabilitySet": {
