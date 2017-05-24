@@ -5,13 +5,11 @@
     "adAvailabilitySetId": {
       "type": "string"
     },
-    "adPDCNICIPAddress": {
-      "type": "string",
-      "metadata": { "description": "The IP Addresses assigned to the pdc domain controllers" }
-    },
-    "adBDCNICIPAddress": {
-      "type": "string",
-      "metadata": { "description": "The IP Addresses assigned to the bdc domain controllers" }
+    "dcPrivateIPsforDNS": {
+      "type": "array",
+      "metadata": {
+        "Description": "DNS Servers configured on the NIC"
+      }
     },
     "adminPassword": {
       "type": "securestring",
@@ -81,6 +79,8 @@
     "adBDCVMName": "[concat(parameters('adVMName'), '1')]",
     "osDisk": "[concat(variables('adBDCVMName'),'-osDisk')]",
     "dataDisk": "[concat(variables('adBDCVMName'),'-dataDisk')]",
+    "adpdcNICIPAddress": "[parameters('dcPrivateIPsforDNS')[0]]",
+    "adbdcNICIPAddress": "[parameters('dcPrivateIPsforDNS')[1]]",
     "networkApiVersion": "2017-04-01",
     "computeApiVersion": "2017-03-30"
   },
@@ -102,7 +102,7 @@
               "subnet": {
                 "id": "[variables('adSubnetID')]"
               },
-              "privateIPAddress": "[parameters('adBDCNICIPAddress')]",
+              "privateIPAddress": "[variables('adBDCNICIPAddress')]",
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('rdpIPAddressAdName'), '1'))]"
               }
@@ -110,7 +110,7 @@
           }
         ],
         "dnsSettings": {
-          "dnsServers": "[parameters('adPDCNICIPAddress')]"
+          "dnsServers": "[parameters('dcPrivateIPsforDNS')]"
         }
       }
     },

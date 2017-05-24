@@ -349,7 +349,6 @@
       "apiVersion": "[variables('networkApiVersion')]",
       "name": "VNetDNSServerWithPDC",
       "type": "Microsoft.Resources/deployments",
-      "tags": { "displayName": "VNetDNSServerWithPDC" },
       "dependsOn": [
         "Microsoft.Resources/deployments/AdPdcVM"
       ],
@@ -416,8 +415,6 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "name": "VNetDNSServerWithBDC",
-      "type": "Microsoft.Resources/deployments",
-      "tags": { "displayName": "VNetDNSServerWithBDC" },
       "type": "Microsoft.Resources/deployments",
       "dependsOn": [
         "Microsoft.Resources/deployments/AdBdcVM"
