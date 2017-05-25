@@ -33,7 +33,9 @@
     <None Include="DSC\adfsDSCConfiguration.ps1" />
     <None Include="DSC\cADFS.psd1" />
     <None Include="DSC\cADFS.psm1" />
+    <None Include="DSC\CreateADBDC.ps1" />
     <None Include="DSC\CreateADBDC.ps1.zip" />
+    <None Include="DSC\CreateADPDC.ps1" />
     <None Include="DSC\CreateADPDC.ps1.zip" />
     <None Include="DSC\dscPrereq.ps1" />
     <None Include="DSC\wapDSCConfiguration.ps1" />

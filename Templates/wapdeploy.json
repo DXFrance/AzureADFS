@@ -12,6 +12,10 @@
       "type": "string",
       "metadata": { "description": "PIP WAP Address Name prefix" }
     },
+    "wapRdpIPAddressName": {
+      "type": "string",
+      "metadata": { "description": "PIP ADFS Address Name prefix" }
+    },
     "wapVMName": {
       "type": "string"
     },
@@ -178,16 +182,19 @@
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
-              "subnet": {
-                "id": "[variables('wapSubnetID')]"
-              },
-              "loadBalancerBackendAddressPools": [
-                {
-                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('wapLoadBalancerName')), '/backendAddressPools/WAPLBBE')]"
-                }
-              ]
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('wapRdpIPAddressName'), copyindex()))]"
+                },
+                "subnet": {
+                    "id": "[variables('wapSubnetID')]"
+                  },
+                "loadBalancerBackendAddressPools": [
+                  {
+                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('wapLoadBalancerName')), '/backendAddressPools/WAPLBBE')]"
+                  }
+                ]
+              }
             }
-          }
         ]
       }
     },
@@ -225,7 +232,7 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "[concat(parameters('wapVMName'),'-osDisk-', copyIndex())]",
+            "name": "[concat(parameters('wapVMName'), copyIndex(),'-osDisk')]",
             "caching": "ReadWrite",
             "createOption": "FromImage"
           }
@@ -267,6 +274,32 @@
             "protectedsettings": {
               "Password": "[parameters('adminPassword')]"
             }
+          }
+        },
+        {
+          "apiVersion": "[variables('computeApiVersion')]",
+          "name": "wapDSCConfiguration",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('wapVMName'), copyindex()))]"
+          ],
+          "tags": {
+            "displayName": "wapDSCConfiguration"
+          },
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.9",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "modulesUrl": "[variables('wapDSCTemplate')]",
+              "configurationFunction": "[variables('wapDSCConfigurationFunction')]",
+              "properties": {
+                "nodeName": "[concat(parameters('wapVMName'), copyindex())]"
+              }
+            },
+            "protectedSettings": {}
           }
         }
       ]

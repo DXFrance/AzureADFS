@@ -232,7 +232,7 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "[concat(parameters('adfsVMName'),'-osDisk-', copyIndex())]",
+            "name": "[concat(parameters('adfsVMName'), copyIndex(),'-osDisk')]",
             "caching": "ReadWrite",
             "createOption": "FromImage"
           }
