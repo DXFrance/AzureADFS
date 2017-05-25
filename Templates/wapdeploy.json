@@ -215,7 +215,7 @@
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "wapVirtualMachines" },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', 'wap-', parameters('nicSuffix'), copyindex())]",
+        "[concat('Microsoft.Network/networkInterfaces/', parameters('nicPrefix'), '-', parameters('nicSuffix'), copyindex())]",
         "[concat('Microsoft.Compute/availabilitySets/', parameters('wapAvailabilitySetName'))]"
       ],
       "properties": {
