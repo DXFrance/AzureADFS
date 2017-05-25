@@ -246,7 +246,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceid('Microsoft.Network/networkInterfaces', concat('adfs-', parameters('nicSuffix'), copyindex()))]"
+              "id": "[resourceid('Microsoft.Network/networkInterfaces/', parameters('nicPrefix'), '-', parameters('nicSuffix'), copyindex())]"
             }
           ]
         },
