@@ -35,11 +35,16 @@
     "assetLocation": {
       "type": "string"
     },
-    "nicSuffix": {
+    "nicPrefix": {
       "type": "string",
-      "defaultValue": "NIC",
       "metadata": {
         "description": "This is the prefix name of the Network interfaces"
+      }
+    },
+    "nicSuffix": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the suffix name of the Network interfaces"
       }
     },
     "diagnosticStorageAccountName": {
@@ -84,7 +89,7 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat('ad-',parameters('nicSuffix'), '0')]",
+      "name": "[concat(parameters('nicPrefix'), '-0', parameters('nicSuffix'))]",
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "adNICs" },
       "dependsOn": [

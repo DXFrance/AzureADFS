@@ -47,10 +47,16 @@
       "type": "string",
       "metadata": { "description": "The IP used for the ADFS Load Balancer (Internal)" }
     },
-    "nicSuffix": {
+    "nicPrefix": {
       "type": "string",
       "metadata": {
         "description": "This is the prefix name of the Network interfaces"
+      }
+    },
+    "nicSuffix": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the suffix name of the Network interfaces"
       }
     },
     "diagnosticStorageAccountName": {
@@ -166,7 +172,7 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat('wap-',parameters('nicSuffix'), copyindex())]",
+      "name": "[concat(parameters('nicPrefix'), '-', parameters('nicSuffix'), copyindex())]",
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "wapNICs" },
       "copy": {
@@ -184,17 +190,17 @@
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('wapRdpIPAddressName'), copyindex()))]"
-                },
-                "subnet": {
-                    "id": "[variables('wapSubnetID')]"
-                  },
-                "loadBalancerBackendAddressPools": [
-                  {
-                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('wapLoadBalancerName')), '/backendAddressPools/WAPLBBE')]"
-                  }
-                ]
-              }
+              },
+              "subnet": {
+                "id": "[variables('wapSubnetID')]"
+              },
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('wapLoadBalancerName')), '/backendAddressPools/WAPLBBE')]"
+                }
+              ]
             }
+          }
         ]
       }
     },
@@ -252,30 +258,6 @@
         }
       },
       "resources": [
-        {
-          "apiVersion": "[variables('computeApiVersion')]",
-          "name": "wapJoinDomain",
-          "type": "extensions",
-          "location": "[resourceGroup().location]",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('wapVMName'), copyindex()))]"
-          ],
-          "properties": {
-            "publisher": "Microsoft.Compute",
-            "type": "JsonADDomainExtension",
-            "typeHandlerVersion": "1.0",
-            "settings": {
-              "Name": "[parameters('domainName')]",
-              "OUPath": "[variables('ouPath')]",
-              "User": "[concat(parameters('domainName'),'\\',parameters('adminUsername'))]",
-              "Restart": "true",
-              "Options": "[variables('domainJoinOptions')]"
-            },
-            "protectedsettings": {
-              "Password": "[parameters('adminPassword')]"
-            }
-          }
-        },
         {
           "apiVersion": "[variables('computeApiVersion')]",
           "name": "wapDSCConfiguration",

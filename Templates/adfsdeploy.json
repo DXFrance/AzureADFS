@@ -43,10 +43,16 @@
       "type": "string",
       "metadata": { "description": "The IP used for the ADFS Load Balancer (Internal)" }
     },
-    "nicSuffix": {
+    "nicPrefix": {
       "type": "string",
       "metadata": {
         "description": "This is the prefix name of the Network interfaces"
+      }
+    },
+    "nicSuffix": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the suffix name of the Network interfaces"
       }
     },
     "diagnosticStorageAccountName": {
@@ -166,7 +172,7 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat('adfs-',parameters('nicSuffix'), copyindex())]",
+      "name": "[concat(parameters('nicPrefix'), '-', parameters('nicSuffix'), copyindex())]",
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "adfsNICs" },
       "copy": {
