@@ -371,19 +371,6 @@
       }
     },
     {
-      "type": "Microsoft.Compute/disks",
-      "name": "YO",
-      "tags": { "displayName": "managedDataDisk" },
-      "apiVersion": "[variables('computeApiVersion')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "creationData": {
-          "createOption": "Empty"
-        },
-        "diskSizeGB": 64
-      }
-    },
-    {
       "apiVersion": "[variables('nestedVirtualMachineApiVersion')]",
       "name": "AdBdcVM",
       "type": "Microsoft.Resources/deployments",
