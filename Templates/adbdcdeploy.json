@@ -37,7 +37,7 @@
     "assetLocation": {
       "type": "string"
     },
-    "NetworkInterfaceName": {
+    "nicSuffix": {
       "type": "string",
       "defaultValue": "NIC",
       "metadata": {
@@ -63,7 +63,7 @@
         "description": "This is the allowed list of VM sizes"
       }
     },
-    "rdpIPAddressAdName": {
+    "adRdpIPAddressName": {
       "type": "string",
       "metadata": { "description": "PIP ADFS Address Name prefix" }
     }
@@ -88,7 +88,7 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat('ad-',parameters('NetworkInterfaceName'), '1')]",
+      "name": "[concat('ad-',parameters('nicSuffix'), '1')]",
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "adNICs" },
       "dependsOn": [
@@ -104,7 +104,7 @@
               },
               "privateIPAddress": "[variables('adBDCNICIPAddress')]",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('rdpIPAddressAdName'), '1'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('adRdpIPAddressName'), '1'))]"
               }
             }
           }
@@ -134,7 +134,7 @@
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "adBDCVirtualMachine" },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', 'ad-', parameters('NetworkInterfaceName'), '1')]",
+        "[concat('Microsoft.Network/networkInterfaces/', 'ad-', parameters('nicSuffix'), '1')]",
         "[concat('Microsoft.Compute/disks/', variables('dataDisk'))]"
       ],
       "properties": {
@@ -175,7 +175,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceid('Microsoft.Network/networkInterfaces', concat('ad-', parameters('NetworkInterfaceName'), '1'))]"
+              "id": "[resourceid('Microsoft.Network/networkInterfaces', concat('ad-', parameters('nicSuffix'), '1'))]"
             }
           ]
         },

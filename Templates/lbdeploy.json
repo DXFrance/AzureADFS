@@ -5,7 +5,7 @@
     "adfsLoadBalancerName": { "type": "string" },
     "adfsSubnetID": { "type": "string" },
     "ilbIP": { "type": "string" },
-    "numberofVMInstances": { "type": "int" },
+    "vmInstancesNumber": { "type": "int" },
     "publicIPAddressDNSName": { "type": "string" },
     "publicIPAddressID": { "type": "string" },
     "wapLoadBalancerName": { "type": "string" }
@@ -139,7 +139,7 @@
       "tags": { "displayName": "inboundNATRuleRDP" },
       "copy": {
         "name": "lbNatLoop",
-        "count": "[parameters('numberOfVMInstances')]"
+        "count": "[parameters('vmInstancesNumber')]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Network/loadBalancers',parameters('wapLoadBalancerName'))]"

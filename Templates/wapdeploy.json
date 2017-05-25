@@ -2,23 +2,23 @@
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "adfsAvailabilitySetName": {
+    "wapAvailabilitySetName": {
       "type": "string"
     },
-    "adfsLoadBalancerName": {
+    "wapLoadBalancerName": {
       "type": "string"
     },
-    "adfsNSGName": {
-      "type": "string"
-    },
-    "adfsSubnetName": {
-      "type": "string"
-    },
-    "adfsRdpIPAddressName": {
+    "wapPIPAddressName": {
       "type": "string",
-      "metadata": { "description": "PIP ADFS Address Name prefix" }
+      "metadata": { "description": "PIP WAP Address Name prefix" }
     },
-    "adfsVMName": {
+    "wapVMName": {
+      "type": "string"
+    },
+    "wapNSGName": {
+      "type": "string"
+    },
+    "wapSubnetName": {
       "type": "string"
     },
     "domainName": {
@@ -57,11 +57,11 @@
     },
     "vmInstancesNumber": {
       "type": "int",
-      "defaultValue": 2,
       "metadata": { "description": "The number of ADFS and WAP VMs to build" }
     },
     "vmSize": {
       "type": "string",
+      "defaultValue": "Standard_D1",
       "metadata": {
         "description": "This is the allowed list of VM sizes"
       }
@@ -73,11 +73,10 @@
       }
     }
   },
+
   "variables": {
-    "adfsDSCConfigurationFunction": "adfsDSCConfiguration.ps1\\Main",
-    "adfsDSCTemplate": "[concat(parameters('assetLocation'),'/DSC/adfsDSC.zip')]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
-    "adfsSubnetID": "[concat(variables('vnetID'),'/subnets/',parameters('adfsSubnetName'))]",
+    "wapSubnetID": "[concat(variables('vnetID'),'/subnets/',parameters('wapSubnetName'))]",
     "imageOffer": "WindowsServer",
     "imagePublisher": "MicrosoftWindowsServer",
     "imageSKU": "2012-R2-Datacenter",
@@ -92,13 +91,13 @@
     {
       "apiVersion": "[variables('computeApiVersion')]",
       "type": "Microsoft.Compute/availabilitySets",
-      "name": "[parameters('adfsAvailabilitySetName')]",
+      "name": "[parameters('wapAvailabilitySetName')]",
       "location": "[resourceGroup().location]",
       "sku": {
         "name": "Aligned"
       },
       "tags": {
-        "displayName": "adfsAvailabilitySet"
+        "displayName": "wapAvailabilitySet"
       },
       "properties": {
         "platformUpdateDomainCount": 5,
@@ -108,56 +107,53 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/loadBalancers",
-      "name": "[parameters('adfsLoadBalancerName')]",
+      "name": "[parameters('wapLoadBalancerName')]",
       "location": "[resourceGroup().location]",
-      "tags": { "displayName": "adfsLB" },
+      "tags": { "displayName": "wapLB" },
       "properties": {
+        "backendAddressPools": [
+          { "name": "WAPLBBE" }
+        ],
         "frontendIPConfigurations": [
           {
-            "name": "ADFSLBFE",
+            "name": "WAPLBFE",
             "properties": {
-              "subnet": {
-
-                "id": "[ variables('adfsSubnetID') ]"
-              },
-              "privateIPAddress": "[parameters('ilbIP')]",
-              "privateIPAllocationMethod": "Static"
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('wapPIPAddressName'))]"
+              }
             }
           }
-        ],
-        "backendAddressPools": [
-          {
-            "name": "ADFSLBBE"
-          }
+
         ],
         "loadBalancingRules": [
           {
-            "name": "ADFSLBRules",
+            "name": "wapLBRules",
             "properties": {
               "backendAddressPool": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('adfsLoadBalancerName')), '/backendAddressPools/ADFSLBBE')]"
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('wapLoadBalancerName')), '/backendAddressPools/WAPLBBE')]"
               },
               "backendPort": 443,
               "frontendIPConfiguration": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('adfsLoadBalancerName')), '/frontendIpConfigurations/ADFSLBFE')]"
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('wapLoadBalancerName')), '/frontendIpConfigurations/WAPLBFE')]"
               },
               "frontendPort": 443,
               "idleTimeoutInMinutes": 15,
               "probe": {
-                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('adfsLoadBalancerName')), '/probes/ADFSLBprobe')]"
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('wapLoadBalancerName')), '/probes/WAPLBprobe')]"
               },
               "protocol": "Tcp"
             }
           }
+
         ],
         "probes": [
           {
-            "name": "ADFSLBprobe",
+            "name": "WAPLBprobe",
             "properties": {
-              "intervalInSeconds": 15,
-              "numberOfProbes": 2,
+              "protocol": "Tcp",
               "port": 443,
-              "protocol": "Tcp"
+              "intervalInSeconds": 15,
+              "numberOfProbes": 2
             }
           }
         ]
@@ -166,33 +162,30 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat('adfs-',parameters('nicSuffix'), copyindex())]",
+      "name": "[concat('wap-',parameters('nicSuffix'), copyindex())]",
       "location": "[resourceGroup().location]",
-      "tags": { "displayName": "adfsNICs" },
+      "tags": { "displayName": "wapNICs" },
       "copy": {
         "name": "nicLoop",
         "count": "[parameters('vmInstancesNumber')]"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/loadBalancers/',parameters('adfsLoadBalancerName'))]"
+        "[concat('Microsoft.Network/loadBalancers/',parameters('wapLoadBalancerName'))]"
       ],
       "properties": {
         "ipConfigurations": [
           {
             "name": "ipconfig1",
             "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('wapSubnetID')]"
+              },
               "loadBalancerBackendAddressPools": [
                 {
-                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('adfsLoadBalancerName')), '/backendAddressPools/ADFSLBBE')]"
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('wapLoadBalancerName')), '/backendAddressPools/WAPLBBE')]"
                 }
-              ],
-              "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('adfsRdpIPAddressName'), copyindex()))]"
-              },
-              "subnet": {
-                "id": "[variables('adfsSubnetID')]"
-              }
+              ]
             }
           }
         ]
@@ -201,26 +194,26 @@
     {
       "apiVersion": "[variables('computeApiVersion')]",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat(parameters('adfsVMName'), copyindex())]",
+      "name": "[concat(parameters('wapVMName'), copyindex())]",
       "copy": {
         "name": "virtualMachineLoop",
         "count": "[parameters('vmInstancesNumber')]"
       },
       "location": "[resourceGroup().location]",
-      "tags": { "displayName": "adfsVirtualMachines" },
+      "tags": { "displayName": "wapVirtualMachines" },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', 'adfs-',parameters('nicSuffix'), copyindex())]",
-        "[concat('Microsoft.Compute/availabilitySets/', parameters('adfsAvailabilitySetName'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', 'wap-', parameters('nicSuffix'), copyindex())]",
+        "[concat('Microsoft.Compute/availabilitySets/', parameters('wapAvailabilitySetName'))]"
       ],
       "properties": {
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets',parameters('adfsAvailabilitySetName'))]"
+          "id": "[resourceId('Microsoft.Compute/availabilitySets',parameters('wapAvailabilitySetName'))]"
         },
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[concat(parameters('adfsVMName'), copyIndex())]",
+          "computerName": "[concat(parameters('wapVMName'), copyIndex())]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
@@ -232,7 +225,7 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "[concat(parameters('adfsVMName'),'-osDisk-', copyIndex())]",
+            "name": "[concat(parameters('wapVMName'),'-osDisk-', copyIndex())]",
             "caching": "ReadWrite",
             "createOption": "FromImage"
           }
@@ -240,7 +233,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceid('Microsoft.Network/networkInterfaces', concat('adfs-', parameters('NetworkInterfaceName'), copyindex()))]"
+              "id": "[resourceid('Microsoft.Network/networkInterfaces', concat('wap-', parameters('nicSuffix'), copyindex()))]"
             }
           ]
         },
@@ -254,11 +247,11 @@
       "resources": [
         {
           "apiVersion": "[variables('computeApiVersion')]",
-          "name": "adfsJoinDomain",
+          "name": "wapJoinDomain",
           "type": "extensions",
           "location": "[resourceGroup().location]",
           "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
+            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('wapVMName'), copyindex()))]"
           ],
           "properties": {
             "publisher": "Microsoft.Compute",
@@ -274,32 +267,6 @@
             "protectedsettings": {
               "Password": "[parameters('adminPassword')]"
             }
-          }
-        },
-        {
-          "apiVersion": "[variables('computeApiVersion')]",
-          "name": "adfsDSCConfiguration",
-          "type": "extensions",
-          "location": "[resourceGroup().location]",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
-          ],
-          "tags": {
-            "displayName": "adfsDSCConfiguration"
-          },
-          "properties": {
-            "publisher": "Microsoft.Powershell",
-            "type": "DSC",
-            "typeHandlerVersion": "2.9",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "modulesUrl": "[variables('adfsDSCTemplate')]",
-              "configurationFunction": "[variables('adfsDSCConfigurationFunction')]",
-              "properties": {
-                "nodeName": "[concat(parameters('adfsVMName'), copyindex())]"
-              }
-            },
-            "protectedSettings": {}
           }
         }
       ]

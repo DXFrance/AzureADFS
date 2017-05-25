@@ -39,6 +39,7 @@
     <None Include="DSC\wapDSCConfiguration.ps1" />
     <None Include="Scripts\Deploy-AzureADFS.ps1" />
     <None Include="Templates\adbdcdeploy.json" />
+    <None Include="Templates\wapdeploy.json" />
     <None Include="Templates\adfsdeploy.json" />
     <None Include="Templates\adpdcdeploy.json" />
     <Content Include="Templates\azuredeploy.json" />

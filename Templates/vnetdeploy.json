@@ -49,7 +49,7 @@
           "properties": {
             "addressprefix": "10.0.3.0/24",
             "networkSecurityGroup": {
-              "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('DMZNSGName'))]"
+              "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('wapNSGName'))]"
             }
           }
         },
@@ -73,17 +73,17 @@
   },
   "variables": {
     "adNSGName": "INT-AD",
-    "dmzNSGName": "DMZ-WAP",
+    "wapNSGName": "DMZ-WAP",
     "adfsNSGName": "INT-ADFS",
     "adSubnetName": "adSubnet",
     "adfsSubnetName": "adfsSubnet",
-    "dmzSubnetName": "dmzSubnet",
+    "wapSubnetName": "dmzSubnet",
     "adsubnetrange": "[parameters('subnets')[0].properties.addressPrefix]",
     "adfsSubnetRange": "[parameters('subnets')[1].properties.addressPrefix]",
     "dmzSubnetRange": "[parameters('subnets')[2].properties.addressPrefix]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('vnetName'))]",
     "adfsSubnetId": "[concat(variables('vnetID'),'/subnets/',variables ('adfsSubnetName'))]",
-    "dmzSubnetId": "[concat(variables('vnetID'),'/subnets/',variables ('dmzSubnetName'))]",
+    "wapSubnetID": "[concat(variables('vnetID'),'/subnets/',variables ('wapSubnetName'))]",
     "adSubnetId": "[concat(variables('vnetID'),'/subnets/',variables ('adSubnetName'))]",
     "dhcpIPs": [ "10.0.1.4", "10.0.1.5" ],
     "apiVersion": "2017-04-01"
@@ -526,7 +526,7 @@
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('DMZNSGName')]",
+      "name": "[variables('wapNSGName')]",
       "location": "[resourceGroup().location]",
       "tags": {
         "displayName": "DMZNSG"
@@ -628,7 +628,7 @@
       "tags": { "displayName": "virtualNetwork" },
       "dependsOn": [
         "[concat('Microsoft.Network/networkSecurityGroups/', variables('adNSGName'))]",
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('dmzNSGName'))]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', variables('wapNSGName'))]",
         "[concat('Microsoft.Network/networkSecurityGroups/', variables('adfsNSGName'))]"
       ],
       "properties": {
