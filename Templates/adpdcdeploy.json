@@ -173,7 +173,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceid('Microsoft.Network/networkInterfaces/', parameters('nicPrefix'), '-0', parameters('nicSuffix'))]"
+              "id": "[resourceid('Microsoft.Network/networkInterfaces/', concat(parameters('nicPrefix'), '-0', parameters('nicSuffix')))]"
             }
           ]
         },
