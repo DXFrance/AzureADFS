@@ -293,6 +293,12 @@
           "name": "adfsConfiguration",
           "type": "extensions",
           "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
+          ],
+          "tags": {
+            "displayName": "adfsPowerShellConfiguration"
+          },
           "properties": {
             "publisher": "Microsoft.Compute",
             "extension": "CustomScriptExtension",
