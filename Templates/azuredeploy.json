@@ -367,30 +367,30 @@
         }
       }
     },
-    {
-      "apiVersion": "[variables('networkApiVersion')]",
-      "name": "VNetDNSServerWithPDC",
-      "type": "Microsoft.Resources/deployments",
-      "dependsOn": [
-        "Microsoft.Resources/deployments/AdPdcVM"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": { "uri": "[variables('vnetDNSTemplateURI')]" },
-        "parameters": {
-          "vnetName": { "value": "[ variables('vnetName') ]" },
-          "subnets": { "value": "[ variables('subnets') ]" },
-          "virtualNetworkAddressRange": { "value": "[parameters('virtualNetworkAddressRange')]" },
-          "onPremDNSIP": { "value": "[parameters('onPremDNSIP')]" },
-          "ilbIP": { "value": "[parameters('ilbIP')]" },
-          "dcPrivateIPsforDNS": {
-            "value": [
-              "[parameters('adPDCNICIPAddress')]"
-            ]
+      {
+        "apiVersion": "[variables('networkApiVersion')]",
+        "name": "VNetDNSServerWithPDC",
+        "type": "Microsoft.Resources/deployments",
+        "dependsOn": [
+          "Microsoft.Resources/deployments/AdPdcVM"
+        ],
+        "properties": {
+          "mode": "Incremental",
+          "templateLink": { "uri": "[variables('vnetDNSTemplateURI')]" },
+          "parameters": {
+            "vnetName": { "value": "[ variables('vnetName') ]" },
+            "subnets": { "value": "[ variables('subnets') ]" },
+            "virtualNetworkAddressRange": { "value": "[parameters('virtualNetworkAddressRange')]" },
+            "onPremDNSIP": { "value": "[parameters('onPremDNSIP')]" },
+            "ilbIP": { "value": "[parameters('ilbIP')]" },
+            "dcPrivateIPsforDNS": {
+              "value": [
+                "[parameters('adPDCNICIPAddress')]"
+              ]
+            }
           }
         }
-      }
-    },
+      },
     {
       "apiVersion": "[variables('nestedVirtualMachineApiVersion')]",
       "name": "AdBdcVM",
@@ -480,7 +480,7 @@
           "nicSuffix": { "value": "[parameters('nicSuffix')]" },
           "nicPrefix": { "value": "[variables('adfsNicPrefix')]" },
           "diagnosticStorageAccountName": { "value": "[variables('diagnosticStorageAccountName')]" },
-          "vmInstancesNumber": { "value": "1" },
+          "vmInstancesNumber": { "value": 1 },
           "vmSize": { "value": "[parameters('vmSize')]" },
           "vnetName": { "value": "[ variables('vnetName') ]" }
         }

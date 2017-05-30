@@ -289,10 +289,10 @@
           }
         },
         {
+          "apiVersion": "[variables('computeApiVersion')]",
           "name": "adfsConfiguration",
-          "type": "Microsoft.ClassicCompute/virtualMachines/extensions",
+          "type": "extensions",
           "location": "[resourceGroup().location]",
-          "apiVersion": "2015-06-01",
           "properties": {
             "publisher": "Microsoft.Compute",
             "extension": "CustomScriptExtension",
