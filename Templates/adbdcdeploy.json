@@ -23,7 +23,7 @@
         "description": "Admin username"
       }
     },
-    "domainName": {
+    "fullyQualifiedDomainName": {
       "type": "string"
     },
     "adSubnetName": {
@@ -210,7 +210,7 @@
               "modulesURL": "[variables('adDSCTemplate')]",
               "configurationFunction": "[variables('adBDCConfigurationFunction')]",
               "properties": {
-                "domainName": "[parameters('domainName')]",
+                "domainName": "[parameters('fullyQualifiedDomainName')]",
                 "adminCreds": {
                   "userName": "[parameters('adminUserName')]",
                   "password": "privateSettingsRef:adminPassword"

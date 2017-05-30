@@ -452,7 +452,7 @@
             }
           },
           {
-            "name": "deny_AD_Other_TCP_but_temporaryAllow",
+            "name": "deny_AD_Other_TCP_Debug_Temporary_Allow",
             "properties": {
               "description": "deny remainder of Communications",
               "protocol": "Tcp",
@@ -529,7 +529,7 @@
       "name": "[variables('wapNSGName')]",
       "location": "[resourceGroup().location]",
       "tags": {
-        "displayName": "DMZNSG"
+        "displayName": "wapNSG"
       },
       "properties": {
         "securityRules": [
@@ -601,6 +601,20 @@
               "access": "Deny",
               "priority": 1000,
               "direction": "Outbound"
+            }
+          },
+          {
+            "name": "allow_RDP_from_Internet_Debug_Temporary_Allow",
+            "properties": {
+              "description": "enables RDP from Internet ",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "[variables('dmzSubnetRange')]",
+              "access": "Allow",
+              "priority": 104,
+              "direction": "Inbound"
             }
           },
           {

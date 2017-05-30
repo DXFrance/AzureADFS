@@ -25,7 +25,7 @@
     "wapSubnetName": {
       "type": "string"
     },
-    "domainName": {
+    "fullyQualifiedDomainName": {
       "type": "string"
     },
     "adminPassword": {
@@ -172,7 +172,7 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('nicPrefix'), '-', parameters('nicSuffix'), copyindex())]",
+      "name": "[concat(parameters('nicPrefix'), copyindex(), '-', parameters('nicSuffix'))]",
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "wapNICs" },
       "copy": {
@@ -215,7 +215,7 @@
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "wapVirtualMachines" },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', parameters('nicPrefix'), '-', parameters('nicSuffix'), copyindex())]",
+        "[concat('Microsoft.Network/networkInterfaces/', parameters('nicPrefix'), copyindex(), '-', parameters('nicSuffix'))]",
         "[concat('Microsoft.Compute/availabilitySets/', parameters('wapAvailabilitySetName'))]"
       ],
       "properties": {
@@ -246,7 +246,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceid('Microsoft.Network/networkInterfaces/', concat(parameters('nicPrefix'), '-', parameters('nicSuffix'), copyindex()))]"
+              "id": "[resourceid('Microsoft.Network/networkInterfaces/', concat(parameters('nicPrefix'), copyindex(), '-', parameters('nicSuffix')))]"
             }
           ]
         },
@@ -256,35 +256,7 @@
             "storageUri": "[concat('http://',parameters('diagnosticStorageAccountName'),'.blob.core.windows.net')]"
           }
         }
-      },
-      "resources": [
-        {
-          "apiVersion": "[variables('computeApiVersion')]",
-          "name": "wapDSCConfiguration",
-          "type": "extensions",
-          "location": "[resourceGroup().location]",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('wapVMName'), copyindex()))]"
-          ],
-          "tags": {
-            "displayName": "wapDSCConfiguration"
-          },
-          "properties": {
-            "publisher": "Microsoft.Powershell",
-            "type": "DSC",
-            "typeHandlerVersion": "2.9",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "modulesUrl": "[variables('wapDSCTemplate')]",
-              "configurationFunction": "[variables('wapDSCConfigurationFunction')]",
-              "properties": {
-                "nodeName": "[concat(parameters('wapVMName'), copyindex())]"
-              }
-            },
-            "protectedSettings": {}
-          }
-        }
-      ]
+      }
     }
   ]
 }

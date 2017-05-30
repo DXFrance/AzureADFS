@@ -24,6 +24,9 @@
     "domainName": {
       "type": "string"
     },
+    "fullyQualifiedDomainName": {
+      "type": "string"
+    },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
@@ -80,8 +83,6 @@
     }
   },
   "variables": {
-    "adfsDSCConfigurationFunction": "adfsDSCConfiguration.ps1\\Main",
-    "adfsDSCTemplate": "[concat(parameters('assetLocation'),'/DSC/adfsDSC.zip')]",
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
     "adfsSubnetID": "[concat(variables('vnetID'),'/subnets/',parameters('adfsSubnetName'))]",
     "imageOffer": "WindowsServer",
@@ -92,7 +93,12 @@
     "domainJoinOptions": "3",
     "ouPath": "",
     "networkApiVersion": "2017-04-01",
-    "computeApiVersion": "2017-03-30"
+    "computeApiVersion": "2017-03-30",
+    "adfsVMName": "[concat(parameters('adfsVMName'),'0')]",
+    "serviceUri": "[tolower(concat(parameters('adfsRdpIPAddressName'),'.westeurope.cloudapp.azure.com)'))]",
+    "adfsDSCConfigurationScriptName": "adfsconfig.ps1",
+    "adfsDSCConfigurationScript": "[concat(parameters('assetLocation'),'/Scripts/', variables('adfsDSCConfigurationScriptName'))]",
+    "adfsDSCConfigurationCommand": "[concat('powershell.exe -File ', variables('adfsDSCConfigurationScriptName'),' ', parameters('adfsVMName'), ' ', parameters('domainName'), ' ', parameters('fullyQualifiedDomainName'),' ', parameters('adminUsername'),' ', parameters('adminPassword'),' ', variables('serviceUri'))]"
   },
   "resources": [
     {
@@ -172,7 +178,7 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('nicPrefix'), '-', parameters('nicSuffix'), copyindex())]",
+      "name": "[concat(parameters('nicPrefix'), copyindex(), '-', parameters('nicSuffix'))]",
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "adfsNICs" },
       "copy": {
@@ -215,7 +221,7 @@
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "adfsVirtualMachines" },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', parameters('nicPrefix'), '-', parameters('nicSuffix'), copyindex())]",
+        "[concat('Microsoft.Network/networkInterfaces/', parameters('nicPrefix'), copyindex(), '-', parameters('nicSuffix'))]",
         "[concat('Microsoft.Compute/availabilitySets/', parameters('adfsAvailabilitySetName'))]"
       ],
       "properties": {
@@ -246,7 +252,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceid('Microsoft.Network/networkInterfaces/', concat(parameters('nicPrefix'), '-', parameters('nicSuffix'), copyindex()))]"
+              "id": "[resourceid('Microsoft.Network/networkInterfaces/', concat(parameters('nicPrefix'), copyindex(), '-', parameters('nicSuffix')))]"
             }
           ]
         },
@@ -271,9 +277,9 @@
             "type": "JsonADDomainExtension",
             "typeHandlerVersion": "1.0",
             "settings": {
-              "Name": "[parameters('domainName')]",
+              "Name": "[parameters('fullyQualifiedDomainName')]",
               "OUPath": "[variables('ouPath')]",
-              "User": "[concat(parameters('domainName'),'\\',parameters('adminUsername'))]",
+              "User": "[concat(parameters('fullyQualifiedDomainName'),'\\',parameters('fullyQualifiedDomainName'))]",
               "Restart": "true",
               "Options": "[variables('domainJoinOptions')]"
             },
@@ -283,29 +289,22 @@
           }
         },
         {
-          "apiVersion": "[variables('computeApiVersion')]",
-          "name": "adfsDSCConfiguration",
-          "type": "extensions",
+          "name": "adfsConfiguration",
+          "type": "Microsoft.ClassicCompute/virtualMachines/extensions",
           "location": "[resourceGroup().location]",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
-          ],
-          "tags": {
-            "displayName": "adfsDSCConfiguration"
-          },
+          "apiVersion": "2015-06-01",
           "properties": {
-            "publisher": "Microsoft.Powershell",
-            "type": "DSC",
-            "typeHandlerVersion": "2.9",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "modulesUrl": "[variables('adfsDSCTemplate')]",
-              "configurationFunction": "[variables('adfsDSCConfigurationFunction')]",
-              "properties": {
-                "nodeName": "[concat(parameters('adfsVMName'), copyindex())]"
+            "publisher": "Microsoft.Compute",
+            "extension": "CustomScriptExtension",
+            "version": "1.8",
+            "parameters": {
+              "public": {
+                "fileUris": "[variables('adfsDSCConfigurationScript')]"
+              },
+              "private": {
+                "commandToExecute": "[variables('adfsDSCConfigurationCommand')]"
               }
-            },
-            "protectedSettings": {}
+            }
           }
         }
       ]

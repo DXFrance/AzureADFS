@@ -21,7 +21,7 @@
         "description": "Admin username"
       }
     },
-    "domainName": {
+    "fullyQualifiedDomainName": {
       "type": "string"
     },
     "adSubnetName": {
@@ -89,7 +89,7 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('nicPrefix'), '-0', parameters('nicSuffix'))]",
+      "name": "[concat(parameters('nicPrefix'), '0-', parameters('nicSuffix'))]",
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "adNICs" },
       "dependsOn": [
@@ -132,7 +132,7 @@
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "adPDCVirtualMachine" },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', parameters('nicPrefix'), '-0', parameters('nicSuffix'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', parameters('nicPrefix'), '0-', parameters('nicSuffix'))]",
         "[concat('Microsoft.Compute/disks/', variables('dataDisk'))]"
       ],
       "properties": {
@@ -173,7 +173,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceid('Microsoft.Network/networkInterfaces/', concat(parameters('nicPrefix'), '-0', parameters('nicSuffix')))]"
+              "id": "[resourceid('Microsoft.Network/networkInterfaces/', concat(parameters('nicPrefix'), '0-', parameters('nicSuffix')))]"
             }
           ]
         },
@@ -193,7 +193,6 @@
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', variables('adPDCVMName'))]"
           ],
-
           "tags": { "displayName": "adcPDCExtension" },
           "properties": {
             "publisher": "Microsoft.Powershell",
@@ -204,7 +203,7 @@
               "modulesURL": "[variables('adDSCTemplate')]",
               "configurationFunction": "[variables('adPDCConfigurationFunction')]",
               "properties": {
-                "domainName": "[parameters('domainName')]",
+                "domainName": "[parameters('fullyQualifiedDomainName')]",
                 "adminCreds": {
                   "userName": "[parameters('adminUserName')]",
                   "password": "privateSettingsRef:adminPassword"
