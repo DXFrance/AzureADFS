@@ -38,7 +38,7 @@ Write-Host "scriptFolder" $scriptFolder
 set-location $scriptFolder
 #endregion init
 
-#Login-AzureRmAccount -SubscriptionId $subscriptionId
+Login-AzureRmAccount -SubscriptionId $subscriptionId
 
 # Resource group create
 New-AzureRmResourceGroup `
