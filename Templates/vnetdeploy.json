@@ -46,7 +46,7 @@
           "properties": {
             "addressprefix": "10.0.1.0/25",
             "networkSecurityGroup": {
-              "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('adNSGName'))]"
+              "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('adNSGName'))]"
             }
 
           }
@@ -56,7 +56,7 @@
           "properties": {
             "addressprefix": "10.0.2.0/24",
             "networkSecurityGroup": {
-              "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('adfsNSGName'))]"
+              "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('adfsNSGName'))]"
             }
 
 
@@ -67,7 +67,7 @@
           "properties": {
             "addressprefix": "10.0.3.0/24",
             "networkSecurityGroup": {
-              "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('wapNSGName'))]"
+              "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('wapNSGName'))]"
             }
           }
         },
