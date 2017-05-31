@@ -27,7 +27,7 @@
         "description": "ADFS servers Subnet NSG name"
       }
     },
-    "wapSGName": {
+    "wapNSGName": {
       "type": "string",
       "metadata": {
         "description": "WAP servers Subnet NSG name"
@@ -107,7 +107,7 @@
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('adNSGName')]",
+      "name": "[parameters('adNSGName')]",
       "location": "[resourceGroup().location]",
       "tags": {
         "displayName": "adNSG"
@@ -500,7 +500,7 @@
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('adfsNSGName')]",
+      "name": "[parameters('adfsNSGName')]",
       "location": "[resourceGroup().location]",
       "tags": {
         "displayName": "adfsNSG"
@@ -541,7 +541,7 @@
     {
       "apiVersion": "[variables('apiVersion')]",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('wapNSGName')]",
+      "name": "[parameters('wapNSGName')]",
       "location": "[resourceGroup().location]",
       "tags": {
         "displayName": "wapNSG"
