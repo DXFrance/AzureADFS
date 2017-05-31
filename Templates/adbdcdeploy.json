@@ -71,6 +71,10 @@
     "adRdpIPAddressName": {
       "type": "string",
       "metadata": { "description": "PIP ADFS Address Name prefix" }
+    },
+    "rdpSuffix": {
+      "type": "string",
+      "metadata": { "description": "RDP Address suffix" }
     }
   },
   "variables": {
@@ -109,7 +113,7 @@
               },
               "privateIPAddress": "[variables('adBDCNICIPAddress')]",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('adRdpIPAddressName'), '1'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('adRdpIPAddressName'), '1', parameters('rdpSuffix')))]"
               }
             }
           }

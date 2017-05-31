@@ -145,7 +145,7 @@
     "adbdcTemplateURI": "[concat(parameters('assetLocation'),'/Templates/adbdcdeploy.json')]",
     "adfsTemplateURI": "[concat(parameters('assetLocation'),'/Templates/adfsdeploy.json')]",
     "wapTemplateURI": "[concat(parameters('assetLocation'),'/Templates/wapdeploy.json')]",
-    "adAvailabilitySetName": "[toupper(concat(parameters('companyNamePrefix'), '-AD-AS'))]",
+    "adAvailabilitySetName": "[toupper(concat(parameters('companyNamePrefix'), '-DC-AS'))]",
     "adfsAvailabilitySetName": "[toupper(concat(parameters('companyNamePrefix'), '-ADFS-AS'))]",
     "wapAvailabilitySetName": "[toupper(concat(parameters('companyNamePrefix'), '-WAP-AS'))]",
     "adfsLoadBalancerID": "[resourceId('Microsoft.Network/loadBalancers',variables('adfsLoadBalancerName'))]",
@@ -161,9 +161,10 @@
     "imageOffer": "WindowsServer",
     "imagePublisher": "MicrosoftWindowsServer",
     "imageSKU": "2012-R2-Datacenter",
-    "adRdpIPAddressName": "[tolower(concat(variables('addcVMName'),'-RDP'))]",
-    "adfsRdpIPAddressName": "[tolower(concat(variables('adfsVMName'),'-RDP'))]",
-    "wapRdpIPAddressName": "[tolower(concat(variables('wapVMName'),'-RDP'))]",
+    "rdpSuffix": "-rdp",
+    "adRdpIPAddressName": "[tolower(variables('addcVMName'))]",
+    "adfsRdpIPAddressName": "[tolower(variables('adfsVMName'))]",
+    "wapRdpIPAddressName": "[tolower(variables('wapVMName'))]",
     "wapPIPAddressName": "[tolower(concat(variables('wapVMName'),'-PIP'))]",
     "connectionName": "[tolower(concat(parameters('companyNamePrefix'),'-VPN'))]",
     "diagnosticStorageAccountName": "[replace(replace(tolower(concat(parameters('companyNamePrefix'), uniquestring(resourceGroup().id))), '-',''),'.','')]",
@@ -291,7 +292,7 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(variables('wapRdpIPAddressName'),copyindex())]",
+      "name": "[concat(variables('wapRdpIPAddressName'),copyindex(), variables('rdpSuffix'))]",
       "copy": {
         "name": "virtualMachineLoop",
         "count": "[parameters('vmInstancesNumber')]"
@@ -308,7 +309,7 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(variables('adRdpIPAddressName'),copyindex())]",
+      "name": "[concat(variables('adRdpIPAddressName'),copyindex(), variables('rdpSuffix'))]",
       "copy": {
         "name": "virtualMachineLoop",
         "count": "[parameters('vmInstancesNumber')]"
@@ -325,7 +326,7 @@
     {
       "apiVersion": "[variables('networkApiVersion')]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(variables('adfsRdpIPAddressName'),copyindex())]",
+      "name": "[concat(variables('adfsRdpIPAddressName'),copyindex(), variables('rdpSuffix'))]",
       "copy": {
         "name": "virtualMachineLoop",
         "count": "[parameters('vmInstancesNumber')]"
@@ -348,7 +349,7 @@
         "[concat('Microsoft.Compute/availabilitySets/', variables('adAvailabilitySetName'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
         "Microsoft.Resources/deployments/VNet",
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('adRdpIPAddressName'), 0)]"
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('adRdpIPAddressName'), 0, variables('rdpSuffix'))]"
       ],
       "properties": {
         "mode": "Incremental",
@@ -366,6 +367,7 @@
           "vnetName": { "value": "[ variables('vnetName') ]" },
           "adPDCNICIPAddress": { "value": "[parameters('adPDCNICIPAddress')]" },
           "adRdpIPAddressName": { "value": "[variables('adRdpIPAddressName')]" },
+          "rdpSuffix": { "value": "[variables('rdpSuffix')]" },
           "vmSize": { "value": "[parameters('vmSize')]" }
         }
       }
@@ -404,7 +406,7 @@
       "dependsOn": [
         "[concat('Microsoft.Compute/availabilitySets/', variables('adAvailabilitySetName'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('adRdpIPAddressName'), 1)]",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('adRdpIPAddressName'), 1, variables('rdpSuffix'))]",
         "Microsoft.Resources/deployments/VNetDNSServerWithPDC"
       ],
       "properties": {
@@ -428,6 +430,7 @@
           "diagnosticStorageAccountName": { "value": "[variables('diagnosticStorageAccountName')]" },
           "vnetName": { "value": "[ variables('vnetName') ]" },
           "adRdpIPAddressName": { "value": "[variables('adRdpIPAddressName')]" },
+          "rdpSuffix": { "value": "[variables('rdpSuffix')]" },
           "vmSize": { "value": "[parameters('vmSize')]" }
         }
       }
@@ -467,8 +470,8 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
         "Microsoft.Resources/deployments/VNetDNSServerWithBDC",
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('adfsRdpIPAddressName'), 0)]",
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('adfsRdpIPAddressName'), 1)]"
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('adfsRdpIPAddressName'), 0, variables('rdpSuffix'))]",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('adfsRdpIPAddressName'), 1, variables('rdpSuffix'))]"
       ],
       "properties": {
         "mode": "Incremental",
@@ -478,6 +481,7 @@
           "adfsLoadBalancerName": { "value": "[variables('adfsLoadBalancerName')]" },
           "adfsNSGName": { "value": "[variables('adfsNSGName')]" },
           "adfsRdpIPAddressName": { "value": "[variables('adfsRdpIPAddressName')]" },
+          "rdpSuffix": { "value": "[variables('rdpSuffix')]" },
           "adfsSubnetName": { "value": "[variables('adfsSubnetName')]" },
           "adfsVMName": { "value": "[variables('adfsVMName')]" },
           "domainName": { "value": "[variables('domainName')]" },
@@ -503,8 +507,8 @@
         "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticStorageAccountName'))]",
         "Microsoft.Resources/deployments/adfsVMs",
         "[concat('Microsoft.Network/publicIPAddresses/', variables('wapPIPAddressName'))]",
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('wapRdpIPAddressName'), 0)]",
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('wapRdpIPAddressName'), 1)]"
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('wapRdpIPAddressName'), 0, variables('rdpSuffix'))]",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('wapRdpIPAddressName'), 1, variables('rdpSuffix'))]"
 
       ],
       "properties": {
@@ -517,6 +521,7 @@
           "wapNSGName": { "value": "[variables('wapNSGName')]" },
           "wapPIPAddressName": { "value": "[variables('wapPIPAddressName')]" },
           "wapRdpIPAddressName": { "value": "[variables('wapRdpIPAddressName')]" },
+          "rdpSuffix": { "value": "[variables('rdpSuffix')]" },
           "wapVMName": { "value": "[variables('wapVMName')]" },
           "fullyQualifiedDomainName": { "value": "[variables('fullyQualifiedDomainName')]" },
           "adminPassword": { "value": "[parameters('adminPassword')]" },

@@ -16,6 +16,10 @@
       "type": "string",
       "metadata": { "description": "PIP ADFS Address Name prefix" }
     },
+    "rdpSuffix": {
+      "type": "string",
+      "metadata": { "description": "RDP Address suffix" }
+    },
     "wapVMName": {
       "type": "string"
     },
@@ -189,7 +193,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('wapRdpIPAddressName'), copyindex()))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('wapRdpIPAddressName'), copyindex(), parameters('rdpSuffix')))]"
               },
               "subnet": {
                 "id": "[variables('wapSubnetID')]"
