@@ -301,15 +301,16 @@
           },
           "properties": {
             "publisher": "Microsoft.Compute",
-            "extension": "CustomScriptExtension",
-            "version": "1.8",
-            "parameters": {
-              "public": {
-                "fileUris": "[variables('adfsDSCConfigurationScript')]"
-              },
-              "private": {
-                "commandToExecute": "[variables('adfsDSCConfigurationCommand')]"
-              }
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.8",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[variables('adfsDSCConfigurationScript')]"
+              ]
+            },
+            "protectedSettings": {
+              "commandToExecute": "[variables('adfsDSCConfigurationCommand')]",
             }
           }
         }
