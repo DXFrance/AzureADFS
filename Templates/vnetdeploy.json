@@ -15,6 +15,24 @@
       },
       "defaultValue": "10.0.0.0/16"
     },
+    "adNSGName": {
+      "type": "string",
+      "metadata": {
+        "description": "DC servers Subnet NSG name"
+      }
+    },
+    "adfsNSGName": {
+      "type": "string",
+      "metadata": {
+        "description": "ADFS servers Subnet NSG name"
+      }
+    },
+    "wapSGName": {
+      "type": "string",
+      "metadata": {
+        "description": "WAP servers Subnet NSG name"
+      }
+    },
     "onPremDNSIP": {
       "type": "string",
       "metadata": { "description": "The address of a domain controller on-premises" },
@@ -72,9 +90,6 @@
     }
   },
   "variables": {
-    "adNSGName": "INT-AD",
-    "wapNSGName": "DMZ-WAP",
-    "adfsNSGName": "INT-ADFS",
     "adSubnetName": "adSubnet",
     "adfsSubnetName": "adfsSubnet",
     "wapSubnetName": "dmzSubnet",

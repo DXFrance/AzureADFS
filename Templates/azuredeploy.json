@@ -267,6 +267,9 @@
           "vnetName": { "value": "[ variables('vnetName') ]" },
           "subnets": { "value": "[ variables('subnets') ]" },
           "virtualNetworkAddressRange": { "value": "[parameters('virtualNetworkAddressRange')]" },
+          "adNSGName": { "value": "[variables('adNSGName')]" },
+          "adfsNSGName": { "value": "[variables('adfsNSGName')]" },
+          "wapNSGName": { "value": "[variables('wapNSGName')]" },
           "onPremDNSIP": { "value": "[parameters('onPremDNSIP')]" },
           "ilbIP": { "value": "[parameters('ilbIP')]" }
         }
@@ -381,6 +384,9 @@
             "vnetName": { "value": "[ variables('vnetName') ]" },
             "subnets": { "value": "[ variables('subnets') ]" },
             "virtualNetworkAddressRange": { "value": "[parameters('virtualNetworkAddressRange')]" },
+            "adNSGName": { "value": "[variables('adNSGName')]" },
+            "adfsNSGName": { "value": "[variables('adfsNSGName')]" },
+            "wapNSGName": { "value": "[variables('wapNSGName')]" },
             "onPremDNSIP": { "value": "[parameters('onPremDNSIP')]" },
             "ilbIP": { "value": "[parameters('ilbIP')]" },
             "dcPrivateIPsforDNS": {
@@ -440,6 +446,9 @@
           "vnetName": { "value": "[ variables('vnetName') ]" },
           "subnets": { "value": "[ variables('subnets') ]" },
           "virtualNetworkAddressRange": { "value": "[parameters('virtualNetworkAddressRange')]" },
+          "adNSGName": { "value": "[variables('adNSGName')]" },
+          "adfsNSGName": { "value": "[variables('adfsNSGName')]" },
+          "wapNSGName": { "value": "[variables('wapNSGName')]" },
           "onPremDNSIP": { "value": "[parameters('onPremDNSIP')]" },
           "ilbIP": { "value": "[parameters('ilbIP')]" },
           "dcPrivateIPsforDNS": {
