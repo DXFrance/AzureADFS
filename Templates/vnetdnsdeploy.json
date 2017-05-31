@@ -618,9 +618,9 @@
       "location": "[resourceGroup().location]",
       "tags": { "displayName": "virtualNetwork" },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('adNSGName'))]",
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('wapNSGName'))]",
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('adfsNSGName'))]"
+        "[concat('Microsoft.Network/networkSecurityGroups/', parameters('adNSGName'))]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', parameters('wapNSGName'))]",
+        "[concat('Microsoft.Network/networkSecurityGroups/', parameters('adfsNSGName'))]"
       ],
       "properties": {
         "addressSpace": {
