@@ -98,7 +98,6 @@
     "ouPath": "",
     "networkApiVersion": "2017-04-01",
     "computeApiVersion": "2017-03-30",
-    "adfsVMName": "[concat(parameters('adfsVMName'),'0')]",
     "serviceUri": "[tolower(concat(parameters('adfsRdpIPAddressName'),'.westeurope.cloudapp.azure.com)'))]",
     "adfsDSCConfigurationScriptName": "adfsconfig.ps1",
     "adfsDSCConfigurationScript": "[concat(parameters('assetLocation'),'/Scripts/', variables('adfsDSCConfigurationScriptName'))]",
@@ -297,7 +296,7 @@
     },
     {
       "apiVersion": "[variables('computeApiVersion')]",
-      "name": "[concat(variables('adfsVMName'), copyIndex(), '/adfsConfiguration')]",
+      "name": "[concat(parameters('adfsVMName'), copyIndex(), '/adfsConfiguration')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "location": "[resourceGroup().location]",
       "dependsOn": [
