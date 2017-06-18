@@ -301,7 +301,6 @@
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]",
-        "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()), '/adfsJoinDomain')]"
       ],
       "tags": {
         "displayName": "adfsPowerShellConfiguration"
