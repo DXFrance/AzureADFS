@@ -94,7 +94,7 @@
     "imageSKU": "2012-R2-Datacenter",
     "wapDSCTemplate": "[concat(parameters('assetLocation'),'/DSC/wapDSCConfiguration.ps1')]",
     "wapDSCConfigurationFunction": "wapDSCConfiguration.ps1\\Main",
-    "domainJoinOptions": "1",
+    "domainJoinOptions": "3",
     "ouPath": "",
     "networkApiVersion": "2017-04-01",
     "computeApiVersion": "2017-03-30",
@@ -269,8 +269,8 @@
       "resources": [
         {
           "apiVersion": "[variables('computeApiVersion')]",
-          "name": "adfsJoinDomain",
-          "type": "extensions",
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(concat(parameters('adfsVMName'),copyIndex()),'/adfsJoinDomain')]",
           "location": "[resourceGroup().location]",
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
