@@ -292,34 +292,39 @@
               "Password": "[parameters('adminPassword')]"
             }
           }
-        },
-        {
-          "apiVersion": "[variables('computeApiVersion')]",
-          "name": "adfsConfiguration",
-          "type": "extensions",
-          "location": "[resourceGroup().location]",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
-          ],
-          "tags": {
-            "displayName": "adfsPowerShellConfiguration"
-          },
-          "properties": {
-            "publisher": "Microsoft.Compute",
-            "type": "CustomScriptExtension",
-            "typeHandlerVersion": "1.8",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "fileUris": [
-                "[variables('adfsDSCConfigurationScript')]"
-              ]
-            },
-            "protectedSettings": {
-              "commandToExecute": "[variables('adfsDSCConfigurationCommand')]",
-            }
-          }
         }
       ]
+    },
+    {
+      "apiVersion": "[variables('computeApiVersion')]",
+      "name": "[concat(variables('adfsVMName'), copyIndex(), '/adfsConfiguration')]",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]",
+        "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()), '/adfsJoinDomain')]"
+      ],
+      "tags": {
+        "displayName": "adfsPowerShellConfiguration"
+      },
+      "copy": {
+        "name": "VMADFSExtensionsLoop",
+        "count": "[parameters('vmInstancesNumber')]"
+      },
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.8",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "[variables('adfsDSCConfigurationScript')]"
+          ]
+        },
+        "protectedSettings": {
+          "commandToExecute": "[variables('adfsDSCConfigurationCommand')]"
+        }
+      }
     }
   ]
 }
