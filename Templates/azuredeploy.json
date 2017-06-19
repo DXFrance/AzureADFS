@@ -20,6 +20,13 @@
         "description": "Password for the local administrator account. Cannot be \"P@ssw0rd\" and possibly other such common passwords. Must be 8 characters long and three of the following complexity requirements: uppercase, lowercase, number, special character"
       }
     },
+    "dnsSuffix": {
+      "type": "string",
+      "defaultValue": "cloud",
+      "metadata": {
+        "description": "DNS suffix"
+      }
+    },
     "companyNamePrefix": {
       "type": "string",
       "metadata": { "description": "This is used to prefix the names of the resources created." }
@@ -150,7 +157,7 @@
     "wapAvailabilitySetName": "[toupper(concat(parameters('companyNamePrefix'), '-WAP-AS'))]",
     "adfsLoadBalancerID": "[resourceId('Microsoft.Network/loadBalancers',variables('adfsLoadBalancerName'))]",
     "domainName": "[toupper(parameters('companyNamePrefix'))]",
-    "fullyQualifiedDomainName": "[tolower(concat(variables('domainName'), '.cloud'))]",
+    "fullyQualifiedDomainName": "[tolower(concat(variables('domainName'), '.', parameters('DNSSuffix')))]",
     "adfsVMName": "[toupper(concat(parameters('companyNamePrefix'), '-', parameters('adfsVMNameSuffix')))]",
     "addcVMName": "[toupper(concat(parameters('companyNamePrefix'), '-', parameters('addcVMNameSuffix')))]",
     "wapVMName": "[toupper(concat(parameters('companyNamePrefix'), '-', parameters('wapVMNameSuffix')))]",
@@ -482,6 +489,7 @@
           "adfsNSGName": { "value": "[variables('adfsNSGName')]" },
           "adfsRdpIPAddressName": { "value": "[variables('adfsRdpIPAddressName')]" },
           "rdpSuffix": { "value": "[variables('rdpSuffix')]" },
+          "dnsSuffix": { "value": "[parameters('dnsSuffix')]" },
           "adfsSubnetName": { "value": "[variables('adfsSubnetName')]" },
           "adfsVMName": { "value": "[variables('adfsVMName')]" },
           "domainName": { "value": "[variables('domainName')]" },

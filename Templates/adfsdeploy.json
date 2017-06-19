@@ -43,6 +43,12 @@
         "description": "Admin username"
       }
     },
+    "dnsSuffix": {
+      "type": "string",
+      "metadata": {
+        "description": "DNS suffix"
+      }
+    },
     "assetLocation": {
       "type": "string"
     },
@@ -92,8 +98,6 @@
     "imageOffer": "WindowsServer",
     "imagePublisher": "MicrosoftWindowsServer",
     "imageSKU": "2012-R2-Datacenter",
-    "wapDSCTemplate": "[concat(parameters('assetLocation'),'/DSC/wapDSCConfiguration.ps1')]",
-    "wapDSCConfigurationFunction": "wapDSCConfiguration.ps1\\Main",
     "domainJoinOptions": "3",
     "ouPath": "",
     "networkApiVersion": "2017-04-01",
@@ -283,7 +287,7 @@
             "settings": {
               "Name": "[parameters('fullyQualifiedDomainName')]",
               "OUPath": "[variables('ouPath')]",
-              "User": "[concat(parameters('fullyQualifiedDomainName'),'\\',parameters('fullyQualifiedDomainName'))]",
+              "User": "[concat(parameters('fullyQualifiedDomainName'),'\\',parameters('adminUserName'))]",
               "Restart": "true",
               "Options": "[variables('domainJoinOptions')]"
             },
