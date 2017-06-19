@@ -301,8 +301,8 @@
         },
         {
           "apiVersion": "[variables('computeApiVersion')]",
-          "name": "[concat(parameters('adfsVMName'), copyIndex(), '/adfsConfiguration')]",
           "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(parameters('adfsVMName'), copyIndex(), '/adfsConfiguration')]",
           "location": "[resourceGroup().location]",
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
@@ -310,10 +310,7 @@
           "tags": {
             "displayName": "adfsPowerShellConfiguration"
           },
-          "copy": {
-            "name": "VMADFSExtensionsLoop",
-            "count": "[parameters('vmInstancesNumber')]"
-          },
+
           "properties": {
             "publisher": "Microsoft.Compute",
             "type": "CustomScriptExtension",
