@@ -279,6 +279,9 @@
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
           ],
+          "tags": {
+            "displayName": "adfsJoinDomain"
+          },
           "properties": {
             "publisher": "Microsoft.Compute",
             "type": "JsonADDomainExtension",
@@ -293,6 +296,36 @@
             },
             "protectedsettings": {
               "Password": "[parameters('adminPassword')]"
+            }
+          }
+        },
+        {
+          "apiVersion": "[variables('computeApiVersion')]",
+          "name": "[concat(parameters('adfsVMName'), copyIndex(), '/adfsConfiguration')]",
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('adfsVMName'), copyindex()))]"
+          ],
+          "tags": {
+            "displayName": "adfsPowerShellConfiguration"
+          },
+          "copy": {
+            "name": "VMADFSExtensionsLoop",
+            "count": "[parameters('vmInstancesNumber')]"
+          },
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.8",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[variables('adfsDSCConfigurationScript')]"
+              ]
+            },
+            "protectedSettings": {
+              "commandToExecute": "[variables('adfsDSCConfigurationCommand')]"
             }
           }
         }
