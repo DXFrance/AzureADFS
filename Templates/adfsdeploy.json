@@ -103,9 +103,9 @@
     "networkApiVersion": "2017-04-01",
     "computeApiVersion": "2017-03-30",
     "serviceUri": "[tolower(concat(parameters('adfsRdpIPAddressName'),'.westeurope.cloudapp.azure.com)'))]",
-    "adfsDSCConfigurationScriptName": "adfsconfig.ps1",
+    "adfsDSCConfigurationScriptName": "adfsconfig",
     "adfsDSCConfigurationScript": "[concat(parameters('assetLocation'),'/Scripts/', variables('adfsDSCConfigurationScriptName'))]",
-    "adfsDSCConfigurationCommand": "[concat('powershell.exe -File ', variables('adfsDSCConfigurationScriptName'),' ', parameters('adfsVMName'), ' ', parameters('domainName'), ' ', parameters('fullyQualifiedDomainName'),' ', parameters('adminUsername'),' ', parameters('adminPassword'),' ', variables('serviceUri'))]"
+    "adfsDSCConfigurationCommand": "[concat('powershell.exe -File ', variables('adfsDSCConfigurationScriptName'),'.ps1 ', parameters('adfsVMName'), ' ', parameters('domainName'), ' ', parameters('fullyQualifiedDomainName'),' ', parameters('adminUsername'),' ', parameters('adminPassword'),' ', variables('serviceUri'), ' *> ', variables('adfsDSCConfigurationScriptName'),'.log')]"
   },
   "resources": [
     {

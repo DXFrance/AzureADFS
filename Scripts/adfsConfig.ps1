@@ -14,7 +14,7 @@ Write-Host "scriptFolder" $scriptFolder
 # Should be C:\Packages\Plugins\Microsoft.Compute.CustomScriptExtension\1.8\Downloads\0
 $ScriptBaseName = [io.path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Name)
 
-start-transcript -path $scriptfolder\$ScriptBaseName.txt
+start-transcript -path "$scriptfolder\$ScriptBaseName.txt"
 		
 $adSecurePassword = $adPassword | ConvertTo-SecureString -AsPlainText -Force
 $domUser = $domain + "\" + $adUser
@@ -57,3 +57,5 @@ Install-AdfsStandalone `
 #		Net Start ADFS
         
 Write-Host "AD FS Standalone installation complete."
+
+stop-transcript
