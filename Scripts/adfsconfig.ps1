@@ -8,6 +8,13 @@ Param(
     )
 
 Set-ExecutionPolicy Unrestricted -Force
+
+$scriptFolder = Split-Path -Parent $MyInvocation.MyCommand.Definition
+Write-Host "scriptFolder" $scriptFolder
+# Should be C:\Packages\Plugins\Microsoft.Compute.CustomScriptExtension\1.8\Downloads\0
+$ScriptBaseName = [io.path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Name)
+
+start-transcript -path $scriptfolder\$ScriptBaseName.txt
 		
 $adSecurePassword = $adPassword | ConvertTo-SecureString -AsPlainText -Force
 $domUser = $domain + "\" + $adUser
