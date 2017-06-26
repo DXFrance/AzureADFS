@@ -1,0 +1,208 @@
+﻿{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "assetLocation": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/DXFrance/AzureADFS/master",
+      "metadata": { "description": "This is the location in which all the linked templates are stored." }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "localAdmin",
+      "metadata": {
+        "description": "Username to set for the local User. Cannot be \"Administrator\", \"root\" and possibly other such common account names. "
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for the local administrator account. Cannot be \"P@ssw0rd\" and possibly other such common passwords. Must be 8 characters long and three of the following complexity requirements: uppercase, lowercase, number, special character"
+      }
+    },
+    "dnsSuffix": {
+      "type": "string",
+      "defaultValue": "cloud",
+      "metadata": {
+        "description": "DNS suffix"
+      }
+    },
+    "companyNamePrefix": {
+      "type": "string",
+      "metadata": { "description": "This is used to prefix the names of the resources created." }
+    },
+    "ilbIP": {
+      "type": "string",
+      "defaultValue": "10.0.2.10",
+      "metadata": { "description": "The IP used for the ADFS Load Balancer (Internal)" }
+    },
+    "nicSuffix": {
+      "type": "string",
+      "defaultValue": "NIC",
+      "metadata": {
+        "description": "This is the suffix name of the Network interfaces"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D1",
+      "metadata": {
+        "description": "Select a VM SKU"
+      }
+    },
+    "localGatewayIPAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "IP Address of the on-premises VPN Appliance"
+      }
+    },
+    "adfsVMNameSuffix": {
+      "type": "string",
+      "defaultValue": "adfs",
+      "metadata": { "description": "Suffix to use for ADFS VM name" }
+    }
+  },
+  "variables": {
+    "adfsAvailabilitySetName": "[toupper(concat(parameters('companyNamePrefix'), '-ADFS-AS'))]",
+    "adfsLoadBalancerName": "[concat(variables('adfsVMName'),'-LB')]",
+    "adfsNSGName": "[concat(variables('adfsVMName'),'-NSG')]",
+    "adfsSubnetName": "adfsSubnet",
+    "adfsRdpIPAddressName": "[tolower(variables('adfsVMName'))]",
+    "rdpSuffix": "-rdp",
+    "adfsVMName": "[toupper(concat(parameters('companyNamePrefix'), '-', parameters('adfsVMNameSuffix')))]",
+    "domainName": "[toupper(parameters('companyNamePrefix'))]",
+    "fullyQualifiedDomainName": "[tolower(concat(variables('domainName'), '.', parameters('dnsSuffix')))]",
+    "adfsNicPrefix": "[variables('adfsVMName')]",
+    "vnetName": "[toupper(concat(parameters('companyNamePrefix'),'-VNET'))]",
+    "diagnosticStorageAccountName": "[replace(replace(tolower(concat(parameters('companyNamePrefix'), uniquestring(resourceGroup().id))), '-',''),'.','')]",
+    "vmInstancesNumber": 1,
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+    "adfsSubnetID": "[concat(variables('vnetID'),'/subnets/',variables('adfsSubnetName'))]",
+    "imageOffer": "WindowsServer",
+    "imagePublisher": "MicrosoftWindowsServer",
+    "imageSKU": "2012-R2-Datacenter",
+    "domainJoinOptions": "3",
+    "ouPath": "",
+    "networkApiVersion": "2017-04-01",
+    "computeApiVersion": "2017-03-30",
+    "serviceUri": "[tolower(concat(variables('adfsRdpIPAddressName'),'.westeurope.cloudapp.azure.com'))]",
+    "adfsDSCConfigurationScriptName": "adfsconfig",
+    "adfsDSCConfigurationScript": "[concat(parameters('assetLocation'),'/Scripts/', variables('adfsDSCConfigurationScriptName'), '.ps1')]",
+    "adfsDSCConfigurationCommand": "[concat('powershell.exe -File ', variables('adfsDSCConfigurationScriptName'),'.ps1 ', variables('adfsVMName'), ' ', variables('domainName'), ' ', variables('fullyQualifiedDomainName'),' ', parameters('adminUsername'),' ', parameters('adminPassword'),' ', variables('serviceUri'), ' *> ', variables('adfsDSCConfigurationScriptName'),'.log')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "[variables('computeApiVersion')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('adfsVMName'), copyindex())]",
+      "copy": {
+        "name": "virtualMachineLoop",
+        "count": "[variables('vmInstancesNumber')]"
+      },
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "adfsVirtualMachines" },
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('adfsAvailabilitySetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[concat(variables('adfsVMName'), copyIndex())]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('imageSKU')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(variables('adfsVMName'), copyIndex(),'-osDisk')]",
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceid('Microsoft.Network/networkInterfaces/', concat(variables('adfsNicPrefix'), copyindex(), '-', parameters('nicSuffix')))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "true",
+            "storageUri": "[concat('http://',variables('diagnosticStorageAccountName'),'.blob.core.windows.net')]"
+          }
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "[variables('computeApiVersion')]",
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(concat(variables('adfsVMName'),copyIndex()),'/adfsJoinDomain')]",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', concat(variables('adfsVMName'), copyindex()))]"
+          ],
+          "tags": {
+            "displayName": "adfsJoinDomain"
+          },
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "JsonADDomainExtension",
+            "typeHandlerVersion": "1.3",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "Name": "[variables('fullyQualifiedDomainName')]",
+              "OUPath": "[variables('ouPath')]",
+              "User": "[concat(variables('fullyQualifiedDomainName'),'\\',parameters('adminUserName'))]",
+              "Restart": "true",
+              "Options": "[variables('domainJoinOptions')]"
+            },
+            "protectedsettings": {
+              "Password": "[parameters('adminPassword')]"
+            }
+          }
+        },
+        {
+          "apiVersion": "[variables('computeApiVersion')]",
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(variables('adfsVMName'), copyIndex(), '/adfsConfiguration')]",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', concat(variables('adfsVMName'), copyindex()))]"
+          ],
+          "tags": {
+            "displayName": "adfsPowerShellConfiguration"
+          },
+
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.8",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[variables('adfsDSCConfigurationScript')]"
+              ]
+            },
+            "protectedSettings": {
+              "commandToExecute": "[variables('adfsDSCConfigurationCommand')]"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "result": {
+      "value": "[variables('adfsDSCConfigurationCommand')]",
+      "type": "string"
+    }
+  }
+}

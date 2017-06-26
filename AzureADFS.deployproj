@@ -42,6 +42,9 @@
     <None Include="Scripts\adfsConfig.ps1" />
     <None Include="Scripts\Deploy-AzureADFS.ps1" />
     <None Include="Templates\adbdcdeploy.json" />
+    <Content Include="Templates\adfs.json" />
+    <None Include="Templates\go.json" />
+    <None Include="Templates\msmq.json" />
     <None Include="Templates\wapdeploy.json" />
     <None Include="Templates\adfsdeploy.json" />
     <None Include="Templates\adpdcdeploy.json" />

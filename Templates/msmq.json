@@ -1,0 +1,310 @@
+﻿{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "assetLocation": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/DXFrance/AzureMSMQ/master",
+      "metadata": { "description": "This is the location in which all the linked templates are stored." }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "localAdmin",
+      "metadata": {
+        "description": "Username to set for the local User. Cannot be \"Administrator\", \"root\" and possibly other such common account names. "
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Password for the local administrator account. Cannot be \"P@ssw0rd\" and possibly other such common passwords. Must be 8 characters long and three of the following complexity requirements: uppercase, lowercase, number, special character"
+      }
+    },
+    "dnsSuffix": {
+      "type": "string",
+      "defaultValue": "cloud",
+      "metadata": {
+        "description": "DNS suffix"
+      }
+    },
+    "companyNamePrefix": {
+      "type": "string",
+      "metadata": { "description": "This is used to prefix the names of the resources created." }
+    },
+    "ilbIP": {
+      "type": "string",
+      "defaultValue": "10.0.2.11",
+      "metadata": { "description": "The IP used for the MSMQ Load Balancer (Internal)" }
+    },
+    "nicSuffix": {
+      "type": "string",
+      "defaultValue": "NIC",
+      "metadata": {
+        "description": "This is the suffix name of the Network interfaces"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_D1",
+      "metadata": {
+        "description": "Select a VM SKU"
+      }
+    },
+    "localGatewayIPAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "IP Address of the on-premises VPN Appliance"
+      }
+    },
+    "MSMQVMNameSuffix": {
+      "type": "string",
+      "defaultValue": "MSMQ",
+      "metadata": { "description": "Suffix to use for MSMQ VM name" }
+    },
+    "vmInstancesNumber": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": { "description": "The number of ADFS and WAP VMs to build" }
+    }
+  },
+  "variables": {
+    "MSMQAvailabilitySetName": "[toupper(concat(parameters('companyNamePrefix'), '-MSMQ-AS'))]",
+    "MSMQLoadBalancerName": "[concat(variables('MSMQVMName'),'-LB')]",
+    "MSMQNSGName": "[concat(variables('MSMQVMName'),'-NSG')]",
+    "MSMQSubnetName": "ADFSSubnet",
+    "MSMQRdpIPAddressName": "[tolower(variables('MSMQVMName'))]",
+    "rdpSuffix": "-rdp",
+    "MSMQVMName": "[toupper(concat(parameters('companyNamePrefix'), '-', parameters('MSMQVMNameSuffix')))]",
+    "domainName": "[toupper(parameters('companyNamePrefix'))]",
+    "fullyQualifiedDomainName": "[tolower(concat(variables('domainName'), '.', parameters('dnsSuffix')))]",
+    "MSMQNicPrefix": "[variables('MSMQVMName')]",
+    "vnetName": "[toupper(concat(parameters('companyNamePrefix'),'-VNET'))]",
+    "diagnosticStorageAccountName": "[replace(replace(tolower(concat(parameters('companyNamePrefix'), uniquestring(resourceGroup().id))), '-',''),'.','')]",
+    "vmInstancesNumber": 1,
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+    "MSMQSubnetID": "[concat(variables('vnetID'),'/subnets/',variables('MSMQSubnetName'))]",
+    "imageOffer": "WindowsServer",
+    "imagePublisher": "MicrosoftWindowsServer",
+    "imageSKU": "2012-R2-Datacenter",
+    "domainJoinOptions": "3",
+    "ouPath": "",
+    "networkApiVersion": "2017-04-01",
+    "computeApiVersion": "2017-03-30",
+    "serviceUri": "[tolower(concat(variables('MSMQRdpIPAddressName'),'.westeurope.cloudapp.azure.com'))]",
+    "MSMQDSCConfigurationScriptName": "MSMQconfig",
+    "MSMQDSCConfigurationScript": "[concat(parameters('assetLocation'),'/Scripts/', variables('MSMQDSCConfigurationScriptName'), '.ps1')]",
+    "MSMQDSCConfigurationCommand": "[concat('powershell.exe -File ', variables('MSMQDSCConfigurationScriptName'),'.ps1 ', variables('MSMQVMName'), ' ', variables('domainName'), ' ', variables('fullyQualifiedDomainName'),' ', parameters('adminUsername'),' ', parameters('adminPassword'),' ', variables('serviceUri'), ' *> ', variables('MSMQDSCConfigurationScriptName'),'.log')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "[variables('computeApiVersion')]",
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('MSMQAvailabilitySetName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Aligned"
+      },
+      "tags": {
+        "displayName": "MSMQAvailabilitySet"
+      },
+      "properties": {
+        "platformUpdateDomainCount": 5,
+        "platformFaultDomainCount": 3
+      }
+    },
+    {
+      "apiVersion": "[variables('networkApiVersion')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "[variables('MSMQLoadBalancerName')]",
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "MSMQLB" },
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "MSMQLBFE",
+            "properties": {
+              "subnet": {
+
+                "id": "[ variables('MSMQSubnetID') ]"
+              },
+              "privateIPAddress": "[parameters('ilbIP')]",
+              "privateIPAllocationMethod": "Static"
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "MSMQLBBE"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "MSMQLBRules",
+            "properties": {
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('MSMQLoadBalancerName')), '/backendAddressPools/MSMQLBBE')]"
+              },
+              "backendPort": 443,
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('MSMQLoadBalancerName')), '/frontendIpConfigurations/MSMQLBFE')]"
+              },
+              "frontendPort": 443,
+              "idleTimeoutInMinutes": 15,
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('MSMQLoadBalancerName')), '/probes/MSMQLBprobe')]"
+              },
+              "protocol": "Tcp"
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "MSMQLBprobe",
+            "properties": {
+              "intervalInSeconds": 15,
+              "numberOfProbes": 2,
+              "port": 443,
+              "protocol": "Tcp"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('networkApiVersion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('msmqRdpIPAddressName'),copyindex(), variables('rdpSuffix'))]",
+      "copy": {
+        "name": "virtualMachineLoop",
+        "count": "[parameters('vmInstancesNumber')]"
+      },
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "adfsRdpIPAddressName" },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[concat(variables('msmqRdpIPAddressName'),copyindex())]"
+        }
+      }
+    },
+    {
+      "apiVersion": "[variables('networkApiVersion')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('MSMQNicPrefix'), copyindex(), '-', parameters('nicSuffix'))]",
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "MSMQNICs" },
+      "copy": {
+        "name": "nicLoop",
+        "count": "[parameters('vmInstancesNumber')]"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/loadBalancers/',variables('MSMQLoadBalancerName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "loadBalancerBackendAddressPools": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('MSMQLoadBalancerName')), '/backendAddressPools/MSMQLBBE')]"
+                }
+              ],
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('MSMQRdpIPAddressName'), copyindex(), variables('rdpSuffix')))]"
+              },
+              "subnet": {
+                "id": "[variables('MSMQSubnetID')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "[variables('computeApiVersion')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('MSMQVMName'), copyindex())]",
+      "copy": {
+        "name": "virtualMachineLoop",
+        "count": "[parameters('vmInstancesNumber')]"
+      },
+      "location": "[resourceGroup().location]",
+      "tags": { "displayName": "MSMQVirtualMachines" },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('MSMQNicPrefix'), copyindex(), '-', parameters('nicSuffix'))]",
+        "[concat('Microsoft.Compute/availabilitySets/', variables('MSMQAvailabilitySetName'))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('MSMQAvailabilitySetName'))]"
+        },
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[concat(variables('MSMQVMName'), copyIndex())]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('imageSKU')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(variables('MSMQVMName'), copyIndex(),'-osDisk')]",
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceid('Microsoft.Network/networkInterfaces/', concat(variables('MSMQNicPrefix'), copyindex(), '-', parameters('nicSuffix')))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "true",
+            "storageUri": "[concat('http://',variables('diagnosticStorageAccountName'),'.blob.core.windows.net')]"
+          }
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "[variables('computeApiVersion')]",
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(concat(variables('MSMQVMName'),copyIndex()),'/MSMQJoinDomain')]",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', concat(variables('MSMQVMName'), copyindex()))]"
+          ],
+          "tags": {
+            "displayName": "MSMQJoinDomain"
+          },
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "JsonADDomainExtension",
+            "typeHandlerVersion": "1.3",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "Name": "[variables('fullyQualifiedDomainName')]",
+              "OUPath": "[variables('ouPath')]",
+              "User": "[concat(variables('fullyQualifiedDomainName'),'\\',parameters('adminUserName'))]",
+              "Restart": "true",
+              "Options": "[variables('domainJoinOptions')]"
+            },
+            "protectedsettings": {
+              "Password": "[parameters('adminPassword')]"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

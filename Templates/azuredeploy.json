@@ -36,7 +36,6 @@
       "defaultValue": "DC",
       "metadata": { "description": "The suffix of the DC: <COMPANYNAMEPREFIX> + -ADDCNAMESUFFIX + index" }
     },
-
     "adfsVMNameSuffix": {
       "type": "string",
       "defaultValue": "adfs",
@@ -157,7 +156,7 @@
     "wapAvailabilitySetName": "[toupper(concat(parameters('companyNamePrefix'), '-WAP-AS'))]",
     "adfsLoadBalancerID": "[resourceId('Microsoft.Network/loadBalancers',variables('adfsLoadBalancerName'))]",
     "domainName": "[toupper(parameters('companyNamePrefix'))]",
-    "fullyQualifiedDomainName": "[tolower(concat(variables('domainName'), '.', parameters('DNSSuffix')))]",
+    "fullyQualifiedDomainName": "[tolower(concat(variables('domainName'), '.', parameters('dnsSuffix')))]",
     "adfsVMName": "[toupper(concat(parameters('companyNamePrefix'), '-', parameters('adfsVMNameSuffix')))]",
     "addcVMName": "[toupper(concat(parameters('companyNamePrefix'), '-', parameters('addcVMNameSuffix')))]",
     "wapVMName": "[toupper(concat(parameters('companyNamePrefix'), '-', parameters('wapVMNameSuffix')))]",
@@ -347,7 +346,6 @@
         }
       }
     },
-
     {
       "apiVersion": "[variables('nestedVirtualMachineApiVersion')]",
       "name": "AdPdcVM",

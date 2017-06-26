@@ -6,7 +6,8 @@
     $resourceGroupName = "SG-RG-AzureADFS",
     $resourceGroupDeploymentName = "AzureADFS-Deployed",
     $resourceLocation = "West Europe",
-    $templateFile = "azuredeploy.json",
+    #$templateFile = "azuredeploy.json",
+    $templateFile = "MSMQ.json",
     $templateParameterFile = "azuredeploy.parameters.json",
     $templateFolder = "..\Templates",
     $tagName = "SG-RG-ADFS",
@@ -38,15 +39,26 @@ Write-Host "scriptFolder" $scriptFolder
 set-location $scriptFolder
 #endregion init
 
-Login-AzureRmAccount -SubscriptionId $subscriptionId
+#Login-AzureRmAccount -SubscriptionId $subscriptionId
 
 # Resource group create
+<#
 New-AzureRmResourceGroup `
 	-Name $resourceGroupName `
 	-Location $resourceLocation `
     -Tag @{Name=$tagName;Value=$tagValue} `
     -Verbose
+#>
 
+Get-AzureRmResourceGroup -Name $resourceGroupName -ev notPresent -ea 0
+if ($notPresent)
+{
+    New-AzureRmResourceGroup `
+	-Name $resourceGroupName `
+	-Location $resourceLocation `
+    -Tag @{Name=$tagName;Value=$tagValue} `
+    -Verbose
+}
 # Resource group deploy
 New-AzureRmResourceGroupDeployment `
     -Name $resourceGroupDeploymentName `
